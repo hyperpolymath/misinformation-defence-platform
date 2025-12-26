@@ -1,0 +1,71 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+= Misinformation Defence Platform - Roadmap
+:toc:
+:icons: font
+
+[NOTE]
+====
+*Roadmap Status: Awaiting Specification*
+
+Detailed milestones and deliverables will be defined once the core project specification is uploaded.
+====
+
+== Current Phase: Infrastructure Setup
+
+[%header,cols="1,3,1"]
+|===
+|Item |Description |Status
+
+|Repository scaffolding
+|Base repository structure, licensing, governance
+|icon:check-circle[role=green] Complete
+
+|CI/CD pipelines
+|Quality checks, security scanning, mirroring
+|icon:check-circle[role=green] Complete
+
+|Language policy
+|Development standards and toolchain requirements
+|icon:check-circle[role=green] Complete
+
+|Issue templates
+|Bug reports, feature requests, documentation
+|icon:check-circle[role=green] Complete
+|===
+
+== Planned Phases
+
+=== Phase 1: Specification
+* [ ] Core architecture design
+* [ ] API specifications
+* [ ] Data model definitions
+* [ ] Threat model documentation
+
+=== Phase 2: Foundation
+* [ ] Core detection engine (Rust)
+* [ ] API layer (Gleam)
+* [ ] Web interface scaffolding (ReScript/Deno)
+
+=== Phase 3: Detection Systems
+* [ ] Content analysis modules
+* [ ] Source credibility assessment
+* [ ] Pattern recognition systems
+* [ ] Real-time monitoring capabilities
+
+=== Phase 4: Response Tooling
+* [ ] Alert and notification systems
+* [ ] Reporting interfaces
+* [ ] Integration APIs
+* [ ] Dashboard and analytics
+
+=== Phase 5: Deployment & Operations
+* [ ] Containerisation
+* [ ] Deployment automation
+* [ ] Monitoring and observability
+* [ ] Documentation completion
+
+== Contributing
+
+See link:CODE_OF_CONDUCT.md[Code of Conduct] and contribution guidelines.
+
+Roadmap priorities may shift based on community feedback and project needs.

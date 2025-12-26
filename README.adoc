@@ -1,1 +1,86 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+= Misinformation Defence Platform
+:toc:
+:toc-placement!:
+:icons: font
 
+A platform for combating misinformation through detection, analysis, and response tooling.
+
+[NOTE]
+====
+*Project Status: Specification Phase*
+
+This repository currently contains project infrastructure only.
+Core specification and implementation details will be uploaded shortly.
+====
+
+toc::[]
+
+== Overview
+
+The Misinformation Defence Platform aims to provide tools and systems for identifying, analysing, and responding to misinformation across digital channels.
+
+== Current State
+
+This repository is in its initial setup phase with foundational infrastructure:
+
+* Repository governance and contribution guidelines
+* CI/CD pipeline scaffolding
+* Language policy and development standards
+* Security and quality enforcement workflows
+
+== Technology Stack
+
+Per the link:.claude/CLAUDE.md[language policy], this project uses:
+
+[cols="1,2"]
+|===
+|Component |Technology
+
+|Primary application code
+|ReScript
+
+|Runtime
+|Deno
+
+|Performance-critical systems
+|Rust
+
+|Backend services
+|Gleam
+
+|Configuration
+|Nickel
+
+|State/meta files
+|Guile Scheme
+|===
+
+== Getting Started
+
+[source,bash]
+----
+# Clone the repository
+git clone https://github.com/hyperpolymath/misinformation-defence-platform.git
+cd misinformation-defence-platform
+
+# View available tasks
+just
+----
+
+== Documentation
+
+* link:ROADMAP.adoc[Roadmap] - Project development phases
+* link:docs/CITATIONS.adoc[Citations] - How to cite this project
+* link:SECURITY.md[Security Policy] - Vulnerability reporting
+* link:CODE_OF_CONDUCT.md[Code of Conduct] - Community guidelines
+
+== License
+
+This project is licensed under link:LICENSE.txt[AGPL-3.0-or-later].
+
+== Support
+
+* GitHub Sponsors: https://github.com/sponsors/hyperpolymath[hyperpolymath]
+* Ko-fi: https://ko-fi.com/hyperpolymath[hyperpolymath]
+* Liberapay: https://liberapay.com/hyperpolymath[hyperpolymath]
