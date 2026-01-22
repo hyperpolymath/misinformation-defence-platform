@@ -79,7 +79,7 @@ just
 
 == License
 
-This project is licensed under link:LICENSE.txt[AGPL-3.0-or-later].
+This project is licensed under link:LICENSE.txt[PMPL-1.0-or-later].
 
 == Support
 
