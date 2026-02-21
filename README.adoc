@@ -86,3 +86,8 @@ This project is licensed under link:LICENSE.txt[PMPL-1.0-or-later].
 * GitHub Sponsors: https://github.com/sponsors/hyperpolymath[hyperpolymath]
 * Ko-fi: https://ko-fi.com/hyperpolymath[hyperpolymath]
 * Liberapay: https://liberapay.com/hyperpolymath[hyperpolymath]
+
+
+== Architecture
+
+See link:TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.
