@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-write scripts/dev.js",
+    "build": "deno run --allow-all scripts/build.js",
+    "watch": "deno run --allow-all scripts/watch.js",
+    "test": "deno test --allow-all"
+  },
+  "imports": {
+    "@std/": "https://deno.land/std@0.224.0/",
+    "esbuild": "https://deno.land/x/esbuild@v0.20.1/mod.js"
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": false,
+    "singleQuote": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  }
+}

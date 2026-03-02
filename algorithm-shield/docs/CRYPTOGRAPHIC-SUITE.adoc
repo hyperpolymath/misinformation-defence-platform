@@ -1,0 +1,370 @@
+= Cryptographic Suite for Algorithm Shield
+:toc:
+:toc-placement!:
+
+Based on Absolute Max Cryptographic Suite recommendations, tailored for browser extension constraints.
+
+toc::[]
+
+== Applicable Standards
+
+=== ✅ MANDATORY (v1.5+)
+
+[cols="1,2,2"]
+|===
+|Component |Algorithm |Purpose
+
+|**Accessibility**
+|WCAG 2.3 AAA + ARIA + Semantic HTML
+|Universal access - democracy requires it
+
+|**General Hashing**
+|SHAKE3-512 (512-bit output)
+|.aep file integrity, provenance verification
+
+|**User-Friendly Fingerprints**
+|Base32(SHAKE256) → Wordlist
+|.aep file IDs: "Gigantic-Giraffe-7" instead of hex hashes
+
+|**RNG**
+|ChaCha20-DRBG (512-bit seed)
+|Secure random for lens URL generation, nonces
+|===
+
+=== ✅ RECOMMENDED (v2.0+)
+
+[cols="1,2,2"]
+|===
+|Component |Algorithm |Purpose
+
+|**PQ Signatures**
+|Dilithium5-AES (hybrid)
+|Sign .aep files for provenance (who created this profile?)
+
+|**Symmetric Encryption**
+|XChaCha20-Poly1305 (256-bit key)
+|Optional .aep file encryption (sensitive profiles)
+
+|**Key Derivation**
+|HKDF-SHAKE512
+|Derive encryption keys from user passphrase
+
+|**Classical Sigs**
+|Ed448 + Dilithium5 (hybrid)
+|Extension code signing, update verification
+
+|**Fallback**
+|SPHINCS+ (for signatures)
+|Conservative PQ backup if Dilithium5 compromised
+|===
+
+=== ❌ NOT APPLICABLE
+
+[cols="1,2"]
+|===
+|Component |Reason
+
+|Password Hashing (Argon2id)
+|Extension doesn't store passwords
+
+|PQ Key Exchange (Kyber-1024)
+|No network communication (local-only extension)
+
+|Database Hashing (BLAKE3)
+|Use chrome.storage.local (browser-managed)
+
+|Semantic XML/GraphQL
+|Not needed for browser extension
+
+|VM/Execution (GraalVM)
+|JavaScript/WASM environment
+
+|Protocol Stack (QUIC/HTTP/3)
+|Browser handles network protocols
+|===
+
+== Implementation Roadmap
+
+=== Phase 1: Accessibility (v1.0 - IMMEDIATE)
+
+**Goal**: WCAG 2.3 AAA compliance
+
+**Tasks**:
+- [ ] ARIA labels on all interactive elements
+- [ ] Keyboard navigation (tab order, shortcuts, focus management)
+- [ ] Screen reader testing (NVDA, JAWS, VoiceOver)
+- [ ] High contrast mode support
+- [ ] Respect `prefers-reduced-motion`
+- [ ] Scalable text (200% zoom support)
+- [ ] Color contrast: 7:1 minimum (AAA level)
+- [ ] Focus indicators: 2px minimum, high contrast
+- [ ] Semantic HTML (proper heading hierarchy)
+- [ ] Live regions for dynamic content updates
+- [ ] Skip links for keyboard users
+- [ ] Alternative text for all icons/images
+- [ ] Help text / tooltips explaining all controls
+- [ ] Consistent patterns (no surprises)
+- [ ] Plain language (Flesch-Kincaid Grade 8 or below)
+
+**Testing**:
+- [ ] axe DevTools automated scan
+- [ ] Manual keyboard-only navigation
+- [ ] Screen reader walkthrough
+- [ ] User testing with disabled users
+
+=== Phase 2: .aep File Integrity (v1.5)
+
+**Goal**: Verifiable .aep file provenance
+
+**Implementation**:
+
+```javascript
+// Generate .aep file fingerprint
+import { SHAKE256 } from '@noble/hashes/sha3';
+
+function generateAEPFingerprint(profile) {
+  const json = JSON.stringify(profile, null, 2);
+  const hash = SHAKE256(512 / 8); // 512-bit output
+  hash.update(new TextEncoder().encode(json));
+  const digest = hash.digest();
+
+  // Base32 encode for user-friendliness
+  const base32 = Base32.encode(digest).slice(0, 16); // First 16 chars
+
+  // Map to wordlist (e.g., "Gigantic-Giraffe-7")
+  const fingerprint = mapToWordlist(base32);
+
+  return {
+    fingerprint,  // "Gigantic-Giraffe-7"
+    hash: Array.from(digest).map(b => b.toString(16).padStart(2, '0')).join('')
+  };
+}
+```
+
+**.aep Format Update**:
+```json
+{
+  "profile_version": "2.0",
+  "profile_id": "a3f2b1c4-...",
+  "fingerprint": "Gigantic-Giraffe-7",
+  "integrity": {
+    "algorithm": "SHAKE3-512",
+    "hash": "deadbeef..." // 512-bit hex
+  },
+  // ... rest of profile
+}
+```
+
+**Verification**:
+```javascript
+function verifyAEPIntegrity(profile) {
+  const claimed = profile.integrity.hash;
+  const computed = generateAEPFingerprint(profile).hash;
+
+  if (claimed !== computed) {
+    throw new Error('Profile integrity check failed - file may be corrupted or tampered');
+  }
+
+  return true;
+}
+```
+
+=== Phase 3: .aep Signatures (v2.0)
+
+**Goal**: Cryptographically signed profiles for trust
+
+**Why**:
+- Users can verify profile creator
+- Prevents impersonation ("Black woman in tech" profile actually created by troll)
+- Builds trust in community repository
+
+**Implementation** (using Dilithium5 via WebAssembly):
+
+```javascript
+// Profile creator signs their .aep
+async function signProfile(profile, privateKey) {
+  const json = JSON.stringify(profile, null, 2);
+  const signature = await dilithium5.sign(json, privateKey);
+
+  return {
+    ...profile,
+    signature: {
+      algorithm: "Dilithium5-AES",
+      publicKey: "...", // Creator's public key
+      signature: "...", // Base64-encoded signature
+      timestamp: Date.now()
+    }
+  };
+}
+
+// Profile importer verifies signature
+async function verifyProfileSignature(profile) {
+  if (!profile.signature) {
+    return { verified: false, reason: "unsigned" };
+  }
+
+  const { publicKey, signature: sig } = profile.signature;
+  const json = JSON.stringify({ ...profile, signature: undefined }, null, 2);
+
+  const valid = await dilithium5.verify(json, sig, publicKey);
+
+  return {
+    verified: valid,
+    creator: publicKey, // Can map to known identities
+    timestamp: profile.signature.timestamp
+  };
+}
+```
+
+**.aep Community Repository Trust Model**:
+- Users optionally sign profiles with Dilithium5 keys
+- Repository shows "Verified by [PublicKey]" badge
+- Users can build reputation (multiple verified profiles)
+- Trust chains: "Alice vouches for Bob's profile"
+
+=== Phase 4: Optional Encryption (v3.0)
+
+**Goal**: Encrypt sensitive .aep files
+
+**Use Case**: User creates profile with sensitive metadata (health info, location, etc) and wants to share privately
+
+**Implementation** (XChaCha20-Poly1305):
+
+```javascript
+// Encrypt with passphrase
+async function encryptProfile(profile, passphrase) {
+  // Derive key from passphrase using HKDF-SHAKE512
+  const salt = crypto.getRandomValues(new Uint8Array(32));
+  const key = await hkdfSHAKE512(passphrase, salt);
+
+  // Generate nonce (XChaCha20 has 192-bit nonce)
+  const nonce = crypto.getRandomValues(new Uint8Array(24));
+
+  // Encrypt
+  const json = JSON.stringify(profile, null, 2);
+  const ciphertext = xchacha20poly1305.encrypt(json, nonce, key);
+
+  return {
+    encrypted: true,
+    algorithm: "XChaCha20-Poly1305",
+    salt: base64(salt),
+    nonce: base64(nonce),
+    ciphertext: base64(ciphertext)
+  };
+}
+```
+
+**User Flow**:
+```
+User: "Share My Experience" → Password prompt
+      → Encrypt .aep with passphrase
+      → Share encrypted file + password separately
+Recipient: Import .aep → Password prompt
+           → Decrypt and verify
+```
+
+== Dependencies
+
+=== JavaScript Libraries
+
+```json
+{
+  "dependencies": {
+    "@noble/hashes": "^1.3.0",      // SHAKE256, SHAKE3-512
+    "@noble/ciphers": "^0.4.0",     // XChaCha20-Poly1305
+    "dilithium-crystals": "^1.0.0", // Dilithium5 (WASM)
+    "base32-encode": "^2.0.0"       // Base32 encoding
+  }
+}
+```
+
+=== Rust Crates (for v2.0 WASM)
+
+```toml
+[dependencies]
+pqcrypto-dilithium = "0.5"  # Dilithium5
+chacha20poly1305 = "0.10"   # XChaCha20-Poly1305
+sha3 = "0.10"               # SHAKE256, SHAKE3-512
+rand_chacha = "0.3"         # ChaCha20-DRBG
+```
+
+== Formal Verification
+
+**v2.0+ Integration with `proven` library**:
+
+- SHAKE3-512 implementation verified with Coq
+- Dilithium5 bindings through Ephapax (verified signatures)
+- XChaCha20-Poly1305 proven memory-safe via Idris2
+- All crypto operations crash-proof
+
+**See**: `docs/PROVEN-EPHAPAX-INTEGRATION.adoc`
+
+== Migration Plan
+
+=== v1.0 → v1.5 (Accessibility + Integrity)
+
+1. Implement WCAG 2.3 AAA (all UI components)
+2. Add SHAKE3-512 hashing to .aep export
+3. Add fingerprint generation (Base32 → wordlist)
+4. Update .aep format with integrity fields
+
+=== v1.5 → v2.0 (Signatures)
+
+1. Integrate Dilithium5 WASM module
+2. Add key generation UI ("Create Identity")
+3. Add signature verification to .aep import
+4. Update community repository with trust indicators
+
+=== v2.0 → v3.0 (Encryption)
+
+1. Integrate XChaCha20-Poly1305
+2. Add HKDF-SHAKE512 for key derivation
+3. Add passphrase UI for encrypted exports
+4. Update .aep format with encryption metadata
+
+== Security Principles
+
+**Aligned with Absolute Max Suite**:
+
+1. **Post-Quantum Ready**: Dilithium5, SHAKE3-512
+2. **Belt-and-Suspenders**: Hybrid classical+PQ (Ed448 + Dilithium5)
+3. **Proactive Security**: Formal verification (Coq/Isabelle via proven)
+4. **Transparent**: All algorithms documented, source auditable
+5. **User Agency**: Optional features (signatures, encryption)
+6. **Accessibility First**: WCAG 2.3 AAA - democracy requires it
+
+== Testing Strategy
+
+**Security Testing**:
+- [ ] Fuzz .aep parser with malformed inputs
+- [ ] Test signature verification with tampered files
+- [ ] Verify encryption key derivation (HKDF test vectors)
+- [ ] ChaCha20-DRBG randomness testing (NIST SP 800-22)
+
+**Accessibility Testing**:
+- [ ] axe DevTools scan (0 violations)
+- [ ] WAVE tool scan
+- [ ] Lighthouse accessibility audit (100/100)
+- [ ] Manual keyboard navigation
+- [ ] Screen reader testing (3 tools minimum)
+- [ ] User testing with disabled participants
+
+**Integration Testing**:
+- [ ] .aep export → import (round-trip)
+- [ ] Signature verification across browsers
+- [ ] Encryption/decryption with various passphrases
+- [ ] Fingerprint collisions (birthday bound testing)
+
+---
+
+**Next Steps**:
+
+1. ✅ Implement WCAG 2.3 AAA (Task #2)
+2. Add SHAKE3-512 to wasm-loader.js
+3. Create fingerprint generation module
+4. Update .aep format specification
+
+**See Also**:
+- `docs/PERSPECTIVE-SHARING-SYSTEM.adoc` - .aep format
+- `docs/PROVEN-EPHAPAX-INTEGRATION.adoc` - Formal verification
+- `ARCHITECTURE.md` - System overview

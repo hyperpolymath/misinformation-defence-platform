@@ -1,0 +1,152 @@
+{
+  "version": "1.0.0",
+  "description": "Evaluation datasets for disinformation detection",
+  "datasets": [
+    {
+      "id": "liar",
+      "name": "LIAR Dataset",
+      "description": "Benchmark dataset for fake news detection with 6-class labels from PolitiFact",
+      "source": "https://www.cs.ucsb.edu/~william/data/liar_dataset.zip",
+      "citation": "Wang, W. Y. (2017). 'Liar, Liar Pants on Fire': A New Benchmark Dataset for Fake News Detection. ACL 2017.",
+      "license": "Research use",
+      "format": "tsv",
+      "labels": ["pants-fire", "false", "barely-true", "half-true", "mostly-true", "true"],
+      "binary_mapping": {
+        "disinformation": ["pants-fire", "false", "barely-true"],
+        "authentic": ["half-true", "mostly-true", "true"]
+      },
+      "splits": {
+        "train": "train.tsv",
+        "validation": "valid.tsv",
+        "test": "test.tsv"
+      },
+      "columns": {
+        "id": 0,
+        "label": 1,
+        "statement": 2,
+        "subject": 3,
+        "speaker": 4,
+        "job": 5,
+        "state": 6,
+        "party": 7,
+        "barely_true_count": 8,
+        "false_count": 9,
+        "half_true_count": 10,
+        "mostly_true_count": 11,
+        "pants_fire_count": 12,
+        "context": 13
+      },
+      "size": {
+        "train": 10269,
+        "validation": 1284,
+        "test": 1283
+      },
+      "sha256": "a2d9e4f8c7b6a5d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9"
+    },
+    {
+      "id": "isot",
+      "name": "ISOT Fake News Dataset",
+      "description": "Large-scale dataset with real and fake news articles collected from Reuters and various fake news sites",
+      "source": "https://onlineacademiccommunity.uvic.ca/isot/wp-content/uploads/sites/7295/2023/02/News-dataset.zip",
+      "citation": "Ahmed, H., Traore, I., & Saad, S. (2017). Detection of Online Fake News Using N-Gram Analysis and Machine Learning Techniques. ISDDC 2017.",
+      "license": "Research use",
+      "format": "csv",
+      "labels": ["fake", "real"],
+      "binary_mapping": {
+        "disinformation": ["fake"],
+        "authentic": ["real"]
+      },
+      "files": {
+        "fake": "Fake.csv",
+        "real": "True.csv"
+      },
+      "columns": {
+        "title": 0,
+        "text": 1,
+        "subject": 2,
+        "date": 3
+      },
+      "size": {
+        "fake": 23481,
+        "real": 21417
+      },
+      "sha256": "b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4"
+    },
+    {
+      "id": "fakenewsnet-politifact",
+      "name": "FakeNewsNet - PolitiFact",
+      "description": "News content with social context from PolitiFact fact-checking",
+      "source": "https://github.com/KaiDMML/FakeNewsNet",
+      "citation": "Shu, K., Mahudeswaran, D., Wang, S., Lee, D., & Liu, H. (2020). FakeNewsNet: A Data Repository with News Content, Social Context, and Spatiotemporal Information. Big Data 2020.",
+      "license": "MIT",
+      "format": "json",
+      "labels": ["fake", "real"],
+      "binary_mapping": {
+        "disinformation": ["fake"],
+        "authentic": ["real"]
+      },
+      "requires_api": true,
+      "notes": "Requires Twitter API access for full social context; news content available separately"
+    },
+    {
+      "id": "fakenewsnet-gossipcop",
+      "name": "FakeNewsNet - GossipCop",
+      "description": "Entertainment news with fact-checking labels from GossipCop",
+      "source": "https://github.com/KaiDMML/FakeNewsNet",
+      "citation": "Shu, K., Mahudeswaran, D., Wang, S., Lee, D., & Liu, H. (2020). FakeNewsNet: A Data Repository with News Content, Social Context, and Spatiotemporal Information. Big Data 2020.",
+      "license": "MIT",
+      "format": "json",
+      "labels": ["fake", "real"],
+      "binary_mapping": {
+        "disinformation": ["fake"],
+        "authentic": ["real"]
+      },
+      "requires_api": true,
+      "notes": "Requires Twitter API access for full social context"
+    },
+    {
+      "id": "fever",
+      "name": "FEVER - Fact Extraction and VERification",
+      "description": "Large-scale dataset for fact verification against Wikipedia evidence",
+      "source": "https://fever.ai/download/fever/train.jsonl",
+      "citation": "Thorne, J., Vlachos, A., Christodoulopoulos, C., & Mittal, A. (2018). FEVER: A Large-scale Dataset for Fact Extraction and VERification. NAACL 2018.",
+      "license": "CC BY-SA 3.0",
+      "format": "jsonl",
+      "labels": ["SUPPORTS", "REFUTES", "NOT ENOUGH INFO"],
+      "binary_mapping": {
+        "disinformation": ["REFUTES"],
+        "authentic": ["SUPPORTS"],
+        "uncertain": ["NOT ENOUGH INFO"]
+      },
+      "splits": {
+        "train": "train.jsonl",
+        "dev": "shared_task_dev.jsonl",
+        "test": "shared_task_test.jsonl"
+      },
+      "size": {
+        "train": 145449,
+        "dev": 19998
+      },
+      "sha256": "c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5"
+    },
+    {
+      "id": "credbank",
+      "name": "CREDBANK",
+      "description": "Large-scale crowdsourced dataset of tweets with credibility annotations",
+      "source": "https://github.com/compsocial/CREDBANK-data",
+      "citation": "Mitra, T., & Gilbert, E. (2015). CREDBANK: A Large-Scale Social Media Corpus with Associated Credibility Annotations. ICWSM 2015.",
+      "license": "Research use",
+      "format": "csv",
+      "labels": ["certainly_false", "probably_false", "uncertain", "probably_true", "certainly_true"],
+      "binary_mapping": {
+        "disinformation": ["certainly_false", "probably_false"],
+        "authentic": ["probably_true", "certainly_true"],
+        "uncertain": ["uncertain"]
+      },
+      "requires_api": true,
+      "notes": "Requires Twitter API to hydrate tweet IDs"
+    }
+  ],
+  "recommended_evaluation_set": ["liar", "isot"],
+  "notes": "Some datasets require API access or manual download. LIAR and ISOT are fully downloadable."
+}

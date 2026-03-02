@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algorithm Shield</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="root">
+    <header class="shield-header">
+      <h1>🛡️ Algorithm Shield</h1>
+      <div class="mode-indicator" id="mode-indicator">Normal</div>
+    </header>
+
+    <section class="dashboard">
+      <div class="membrane-thickness">
+        <label>Membrane Thickness</label>
+        <div class="thickness-bar">
+          <div class="thickness-fill" id="thickness-fill" style="width: 50%"></div>
+        </div>
+        <span class="thickness-value" id="thickness-value">0.50</span>
+      </div>
+
+      <div class="bubble-map" id="bubble-map">
+        <p class="placeholder">Analyzing feed...</p>
+      </div>
+    </section>
+
+    <section class="quick-actions">
+      <button id="breach-btn" class="action-btn breach">
+        ⚡ Breach Membrane
+      </button>
+      <button id="pause-btn" class="action-btn pause">
+        ⏸️ Pause Shield
+      </button>
+    </section>
+
+    <section class="lenses">
+      <h2>Lenses</h2>
+      <div class="lens-grid">
+        <button class="lens-card" data-lens="opposition">
+          <span class="lens-icon">⚔️</span>
+          <span class="lens-name">Opposition</span>
+        </button>
+        <button class="lens-card" data-lens="random-walk">
+          <span class="lens-icon">🎲</span>
+          <span class="lens-name">Random Walk</span>
+        </button>
+        <button class="lens-card" data-lens="time-shift">
+          <span class="lens-icon">⏳</span>
+          <span class="lens-name">Time-Shift</span>
+        </button>
+        <button class="lens-card" data-lens="serendipity">
+          <span class="lens-icon">✨</span>
+          <span class="lens-name">Serendipity</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="personas">
+      <h2>Personas</h2>
+      <div class="persona-grid">
+        <button class="persona-card" data-persona="gardener">
+          <span class="persona-icon">🌱</span>
+          <span class="persona-name">Gardener</span>
+        </button>
+        <button class="persona-card" data-persona="tech-skeptic">
+          <span class="persona-icon">🔒</span>
+          <span class="persona-name">Tech Skeptic</span>
+        </button>
+        <button class="persona-card" data-persona="art-student">
+          <span class="persona-icon">🎨</span>
+          <span class="persona-name">Art Student</span>
+        </button>
+      </div>
+    </section>
+
+    <footer>
+      <a href="panel.html" target="_blank" class="open-panel">Open Control Panel</a>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

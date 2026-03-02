@@ -1,0 +1,628 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Security Headers in Algorithm Shield
+:toc:
+:toc-placement!:
+
+Leveraging HTTP security headers for privacy, security, and algorithmic resistance.
+
+toc::[]
+
+== The Question
+
+**Can we use security headers in our extension, or is this not applicable?**
+
+**Answer**: Very applicable! Extensions can both *use* and *modify* security headers. This unlocks powerful capabilities.
+
+== Three Ways to Use Security Headers
+
+=== 1. Protect Our Own Extension (Essential)
+
+**Use Case**: Secure popup.html, panel.html, and content scripts
+
+**Implementation**: CSP meta tags in extension pages
+
+```html
+<!-- popup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- Content Security Policy for extension page -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'wasm-unsafe-eval';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: https:;
+    connect-src 'self' https://www.youtube.com;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    form-action 'none';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+  ">
+  <title>Algorithm Shield</title>
+</head>
+<body>
+  <!-- Safe from XSS, injection, clickjacking -->
+</body>
+</html>
+```
+
+**Why this matters**:
+- Prevents malicious scripts if extension is compromised
+- Blocks inline scripts (XSS protection)
+- Prevents clickjacking with `frame-ancestors 'none'`
+- WASM requires `'wasm-unsafe-eval'` for our Rust engine
+
+=== 2. Read Security Headers (Privacy Analysis)
+
+**Use Case**: Analyze which platforms have good security posture
+
+**API**: `chrome.webRequest.onHeadersReceived`
+
+```rescript
+// SecurityHeadersAnalyzer.res
+module SecurityHeadersAnalyzer = {
+  type headerAnalysis = {
+    url: string,
+    hasCSP: bool,
+    hasHSTS: bool,
+    hasXFrameOptions: bool,
+    trackingHeaders: array<string>,
+    securityScore: float,
+  }
+
+  // Check headers for privacy/security indicators
+  let analyzeHeaders = (headers: array<ChromeWebRequest.HttpHeader.t>): headerAnalysis => {
+    let hasCSP = headers->Array.some(h =>
+      h.name->String.toLowerCase == "content-security-policy"
+    )
+
+    let hasHSTS = headers->Array.some(h =>
+      h.name->String.toLowerCase == "strict-transport-security"
+    )
+
+    let hasXFrameOptions = headers->Array.some(h =>
+      h.name->String.toLowerCase == "x-frame-options"
+    )
+
+    // Check for tracking indicators
+    let trackingHeaders = headers
+      ->Array.filter(h => {
+        let name = h.name->String.toLowerCase
+        name->String.includes("tracking") ||
+        name->String.includes("x-fb") ||  // Facebook headers
+        name->String.includes("x-amzn")   // Amazon headers
+      })
+      ->Array.map(h => h.name)
+
+    // Calculate security score (0.0 - 1.0)
+    let score = 0.0
+    let score = if hasCSP { score +. 0.4 } else { score }
+    let score = if hasHSTS { score +. 0.3 } else { score }
+    let score = if hasXFrameOptions { score +. 0.2 } else { score }
+    let score = if Array.length(trackingHeaders) == 0 { score +. 0.1 } else { score }
+
+    {
+      url: "",  // Will be set by caller
+      hasCSP,
+      hasHSTS,
+      hasXFrameOptions,
+      trackingHeaders,
+      securityScore: score,
+    }
+  }
+}
+```
+
+**Use Cases**:
+1. **Security Scoring**: Show users which platforms are privacy-respecting
+2. **Lens Preferences**: Prefer opening tabs to sites with good security
+3. **Warning System**: Alert if lens would open tab to insecure site
+
+```rescript
+// In Lens.res - prefer secure sites
+let applyRandomWalkLensWithSecurity = (
+  feedState: FeedState.t,
+  config: LensConfig.t,
+  securityScores: Dict.t<float>  // URL -> security score
+): TransformResult.t => {
+  let urls = generateRandomWalkUrls(feedState, config)
+
+  // Filter out URLs with security score < 0.5
+  let secureUrls = urls->Array.filter(url => {
+    switch securityScores->Dict.get(url) {
+    | Some(score) => score >= 0.5
+    | None => true  // Unknown = allow (benefit of doubt)
+    }
+  })
+
+  // If too many filtered out, warn user
+  let narrative = if Array.length(secureUrls) < Array.length(urls) / 2 {
+    `⚠️ Filtered ${Int.toString(Array.length(urls) - Array.length(secureUrls))} insecure sites`
+  } else {
+    `Opening ${Int.toString(Array.length(secureUrls))} secure exploratory paths`
+  }
+
+  {actions: [Inject(secureUrls)], narrative}
+}
+```
+
+=== 3. Modify Security Headers (Privacy Enhancement)
+
+**Use Case**: Inject privacy-enhancing headers before requests
+
+**API**: `chrome.webRequest.onBeforeSendHeaders`
+
+**CAUTION**: Requires `webRequestBlocking` permission (privacy-sensitive)
+
+```javascript
+// background.js - Inject privacy headers
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function(details) {
+    const headers = details.requestHeaders;
+
+    // Remove fingerprinting headers
+    headers = headers.filter(h =>
+      !['X-Client-Data', 'X-Chrome-Variations'].includes(h.name)
+    );
+
+    // Add privacy-enhancing headers
+    headers.push(
+      {name: 'DNT', value: '1'},                          // Do Not Track
+      {name: 'Sec-GPC', value: '1'},                      // Global Privacy Control
+      {name: 'Sec-Fetch-Site', value: 'same-origin'},     // Confuse CORS fingerprinting
+    );
+
+    // Normalize User-Agent (reduce fingerprinting)
+    const uaIndex = headers.findIndex(h => h.name.toLowerCase() === 'user-agent');
+    if (uaIndex !== -1) {
+      // Use most common UA string to blend in
+      headers[uaIndex].value = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    }
+
+    return {requestHeaders: headers};
+  },
+  {urls: ["<all_urls>"]},
+  ["blocking", "requestHeaders", "extraHeaders"]
+);
+```
+
+**Privacy Benefits**:
+- **DNT + GPC**: Signal tracking preference
+- **Normalized UA**: Reduce browser fingerprinting
+- **Removed telemetry**: Strip Chrome-specific tracking headers
+
+== Header-by-Header Use Cases
+
+=== Content-Security-Policy (CSP)
+
+**What it is**: Whitelist of allowed content sources
+
+**Extension Use**:
+
+**1. Protect our own pages** (popup, panel):
+```
+default-src 'self';
+script-src 'self' 'wasm-unsafe-eval';  # For Rust WASM
+style-src 'self' 'unsafe-inline';       # For UI styling
+connect-src 'self' https://youtube.com; # API calls
+```
+
+**2. Analyze visited pages**:
+```rescript
+let analyzeCSP = (cspHeader: string): {
+  blocksInlineScripts: bool,
+  blocksUnsafeEval: bool,
+  allowsThirdPartyScripts: bool,
+} => {
+  // Parse CSP directives
+  let blocksInlineScripts = !cspHeader->String.includes("'unsafe-inline'")
+  let blocksUnsafeEval = !cspHeader->String.includes("'unsafe-eval'")
+
+  // Check for third-party script sources
+  let scriptSrcMatch = cspHeader->String.match(/script-src ([^;]+)/)
+  let allowsThirdPartyScripts = switch scriptSrcMatch {
+  | Some(match_) => {
+      let sources = match_[1]
+      sources->String.includes("https:") || sources->String.includes("http:")
+    }
+  | None => false
+  }
+
+  {blocksInlineScripts, blocksUnsafeEval, allowsThirdPartyScripts}
+}
+```
+
+**Use Case**: Score platforms on security rigor
+- YouTube with strict CSP = more trustworthy
+- Site with no CSP = potential XSS risk
+
+=== Strict-Transport-Security (HSTS)
+
+**What it is**: Forces HTTPS, prevents downgrade attacks
+
+**Extension Use**: Check if platforms force HTTPS
+
+```rescript
+let checkHSTS = (headers: array<HttpHeader.t>): option<{
+  maxAge: int,
+  includeSubDomains: bool,
+  preload: bool,
+}> => {
+  headers
+    ->Array.find(h => h.name->String.toLowerCase == "strict-transport-security")
+    ->Option.map(hstsHeader => {
+      let value = hstsHeader.value->Option.getOr("")
+
+      {
+        maxAge: extractMaxAge(value),  // e.g., max-age=31536000
+        includeSubDomains: value->String.includes("includeSubDomains"),
+        preload: value->String.includes("preload"),
+      }
+    })
+}
+```
+
+**Use Case**: Warn if lens would navigate to HTTP-only site
+```rescript
+if !hasHSTS(targetUrl) {
+  Console.warn(`⚠️ ${targetUrl} doesn't enforce HTTPS`)
+}
+```
+
+=== Referrer-Policy
+
+**What it is**: Controls how much referrer info is sent
+
+**Extension Use**: Inject strict referrer policy for privacy
+
+```javascript
+// Modify outgoing requests to strip referrer
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function(details) {
+    // Remove or minimize Referer header
+    details.requestHeaders = details.requestHeaders.filter(h =>
+      h.name.toLowerCase() !== 'referer'
+    );
+
+    // Or set to minimal:
+    details.requestHeaders.push({
+      name: 'Referer',
+      value: new URL(details.url).origin  // Only send origin, not full URL
+    });
+
+    return {requestHeaders: details.requestHeaders};
+  },
+  {urls: ["<all_urls>"]},
+  ["blocking", "requestHeaders"]
+);
+```
+
+**Privacy Benefit**: Platforms can't track which lens you used to reach them
+
+**Example**:
+- Without policy: `Referer: https://youtube.com/results?search_query=origami+tutorials`
+- With policy: `Referer: https://youtube.com` (no query params leaked)
+
+=== Permissions-Policy (formerly Feature-Policy)
+
+**What it is**: Controls which browser features are allowed
+
+**Extension Use**: Restrict dangerous features in extension pages
+
+```html
+<!-- popup.html -->
+<meta http-equiv="Permissions-Policy" content="
+  geolocation=(),
+  microphone=(),
+  camera=(),
+  payment=(),
+  usb=(),
+  magnetometer=(),
+  gyroscope=(),
+  accelerometer=(),
+  ambient-light-sensor=()
+">
+```
+
+**Why this matters**:
+- Even if extension is compromised, attacker can't access sensors
+- Prevents fingerprinting via sensor data
+- Locality Lens doesn't need actual geolocation (uses "local" search terms)
+
+**Analyze visited pages**:
+```rescript
+let analyzePermissionsPolicy = (policy: string): {
+  allowsGeolocation: bool,
+  allowsCamera: bool,
+  allowsMicrophone: bool,
+} => {
+  {
+    allowsGeolocation: !policy->String.includes("geolocation=()"),
+    allowsCamera: !policy->String.includes("camera=()"),
+    allowsMicrophone: !policy->String.includes("microphone=()"),
+  }
+}
+```
+
+**Use Case**: Warn if platform requests invasive permissions
+```
+⚠️ YouTube is requesting access to: geolocation, microphone
+```
+
+=== Cross-Origin Policies (COEP, COOP, CORP)
+
+**What they are**: Isolate content from other origins
+
+**Extension Use**: Protect WASM module from cross-origin attacks
+
+```html
+<!-- popup.html -->
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+```
+
+**Why this matters**:
+- `COEP`: Our WASM module can't be embedded by malicious sites
+- `COOP`: Prevents other windows from accessing our extension window
+- Critical for `SharedArrayBuffer` (if we use parallel WASM in v2.0)
+
+**Analyze visited pages**:
+```rescript
+let checkCrossOriginIsolation = (headers: array<HttpHeader.t>): bool => {
+  let hasCOEP = headers->Array.some(h =>
+    h.name->String.toLowerCase == "cross-origin-embedder-policy" &&
+    h.value->Option.getOr("")->String.includes("require-corp")
+  )
+
+  let hasCOOP = headers->Array.some(h =>
+    h.name->String.toLowerCase == "cross-origin-opener-policy" &&
+    h.value->Option.getOr("")->String.includes("same-origin")
+  )
+
+  hasCOEP && hasCOOP  // Both required for true isolation
+}
+```
+
+**Use Case**: Detect if platform is using SharedArrayBuffer (performance optimization)
+
+== Security Header Scoring System
+
+**Combine all headers into a single score**:
+
+```rescript
+module SecurityScore = {
+  type score = {
+    total: float,                    // 0.0 - 10.0
+    breakdown: {
+      csp: float,                    // 0-2 points
+      hsts: float,                   // 0-2 points
+      referrerPolicy: float,         // 0-1 point
+      permissionsPolicy: float,      // 0-2 points
+      crossOriginIsolation: float,   // 0-2 points
+      noTrackingHeaders: float,      // 0-1 point
+    }
+  }
+
+  let calculateScore = (headers: array<HttpHeader.t>): score => {
+    let cspScore = switch analyzeCSP(headers) {
+    | Some(csp) => {
+        let score = 0.0
+        let score = if csp.blocksInlineScripts { score +. 1.0 } else { score }
+        let score = if csp.blocksUnsafeEval { score +. 0.5 } else { score }
+        let score = if !csp.allowsThirdPartyScripts { score +. 0.5 } else { score }
+        score
+      }
+    | None => 0.0
+    }
+
+    let hstsScore = switch checkHSTS(headers) {
+    | Some(hsts) => {
+        let score = 1.0  // Base score for having HSTS
+        let score = if hsts.maxAge >= 31536000 { score +. 0.5 } else { score }  // 1 year+
+        let score = if hsts.includeSubDomains { score +. 0.25 } else { score }
+        let score = if hsts.preload { score +. 0.25 } else { score }
+        score
+      }
+    | None => 0.0
+    }
+
+    let referrerScore = switch checkReferrerPolicy(headers) {
+    | Some(policy) => if isStrictPolicy(policy) { 1.0 } else { 0.5 }
+    | None => 0.0
+    }
+
+    let permissionsScore = switch analyzePermissionsPolicy(headers) {
+    | Some(perms) => {
+        let score = 2.0
+        let score = if perms.allowsGeolocation { score -. 0.5 } else { score }
+        let score = if perms.allowsCamera { score -. 0.5 } else { score }
+        let score = if perms.allowsMicrophone { score -. 0.5 } else { score }
+        max(0.0, score)
+      }
+    | None => 0.0
+    }
+
+    let crossOriginScore = if checkCrossOriginIsolation(headers) { 2.0 } else { 0.0 }
+
+    let trackingScore = if hasTrackingHeaders(headers) { 0.0 } else { 1.0 }
+
+    {
+      total: cspScore +. hstsScore +. referrerScore +. permissionsScore +. crossOriginScore +. trackingScore,
+      breakdown: {
+        csp: cspScore,
+        hsts: hstsScore,
+        referrerPolicy: referrerScore,
+        permissionsPolicy: permissionsScore,
+        crossOriginIsolation: crossOriginScore,
+        noTrackingHeaders: trackingScore,
+      }
+    }
+  }
+}
+```
+
+**Display in popup**:
+```
+Current Platform: YouTube
+Security Score: 7.5/10.0
+
+✅ Content Security Policy (2.0/2.0)
+✅ HSTS with preload (2.0/2.0)
+✅ Strict referrer policy (1.0/1.0)
+⚠️ Permissions policy allows geolocation (1.0/2.0)
+✅ Cross-origin isolation (2.0/2.0)
+⚠️ Some tracking headers detected (0.0/1.0)
+```
+
+== Privacy-Enhancing Header Injection
+
+**Inject headers to protect user privacy during membrane crossing**:
+
+```javascript
+// background.js
+const PRIVACY_HEADERS = [
+  // Standard privacy signals
+  {name: 'DNT', value: '1'},                        // Do Not Track
+  {name: 'Sec-GPC', value: '1'},                    // Global Privacy Control (CCPA/GDPR)
+
+  // Reduce fingerprinting
+  {name: 'Sec-Fetch-Dest', value: 'document'},
+  {name: 'Sec-Fetch-Mode', value: 'navigate'},
+  {name: 'Sec-Fetch-Site', value: 'none'},
+  {name: 'Sec-Fetch-User', value: '?1'},
+
+  // Minimal Accept headers (reduce fingerprinting)
+  {name: 'Accept', value: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'},
+  {name: 'Accept-Language', value: 'en-US,en;q=0.5'},  // Normalized to most common
+  {name: 'Accept-Encoding', value: 'gzip, deflate, br'},
+];
+
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function(details) {
+    // Only apply to lens-generated tabs
+    if (details.tabId !== -1 && isLensGeneratedTab(details.tabId)) {
+      let headers = details.requestHeaders;
+
+      // Remove fingerprinting headers
+      headers = headers.filter(h =>
+        !['X-Client-Data', 'X-Chrome-Variations', 'X-Chrome-UMA-Enabled'].includes(h.name)
+      );
+
+      // Inject privacy headers
+      PRIVACY_HEADERS.forEach(h => {
+        // Only add if not already present
+        if (!headers.some(existing => existing.name.toLowerCase() === h.name.toLowerCase())) {
+          headers.push(h);
+        }
+      });
+
+      return {requestHeaders: headers};
+    }
+  },
+  {urls: ["<all_urls>"]},
+  ["blocking", "requestHeaders", "extraHeaders"]
+);
+```
+
+**Benefit**: Lens-generated tabs are more privacy-preserving than organic browsing
+
+== Ethical Considerations
+
+=== ✅ Safe & Recommended
+
+1. **Protect our own pages**: CSP, Permissions-Policy on popup.html
+2. **Read headers for analysis**: Security scoring, tracking detection
+3. **Inject privacy headers**: DNT, GPC, normalized Accept headers
+4. **Remove telemetry**: Strip X-Chrome-* headers
+
+=== ⚠️ Use with Caution
+
+1. **Modify security headers of visited sites**: Could break functionality
+2. **Inject CSP**: Might block legitimate scripts
+3. **Change CORS headers**: Could bypass security boundaries (don't do this!)
+
+=== ❌ Never Do
+
+1. **Disable site's CSP**: Defeats site's security
+2. **Remove site's HSTS**: Enables downgrade attacks
+3. **Inject permissive CORS**: Security vulnerability
+4. **Fake security headers**: Misleading to user
+
+== Implementation Plan
+
+**v1.0 (Jun 2026)**: Basic security headers
+
+- ✅ CSP for popup.html and panel.html
+- ✅ Permissions-Policy to disable sensors
+- ✅ COEP/COOP for WASM isolation
+
+**v1.5 (Sep 2026)**: Header analysis
+
+- Read security headers from visited pages
+- Calculate security score (0-10)
+- Display score in popup
+- Warn if lens would navigate to insecure site
+
+**v2.0 (Dec 2026)**: Privacy injection
+
+- Inject DNT, GPC headers on lens-generated tabs
+- Normalize User-Agent for fingerprinting resistance
+- Remove Chrome telemetry headers
+- Strict referrer policy
+
+**v3.0 (Mar 2027)**: Advanced features
+
+- Per-lens header profiles (Opposition = strict privacy, Random Walk = blend in)
+- Header-based platform fingerprinting detection
+- Automatic header normalization to most common values
+
+== manifest.json Permissions Required
+
+```json
+{
+  "permissions": [
+    "webRequest",          // Read headers
+    "webRequestBlocking",  // Modify headers (requires user approval)
+    "<all_urls>"           // Access all sites (for header modification)
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://www.youtube.com; object-src 'none'"
+  }
+}
+```
+
+**Note**: `webRequestBlocking` is privacy-sensitive. Chrome will warn users during install.
+
+== Code Integration Points
+
+**1. manifest.json**: Add CSP, permissions
+**2. popup.html**: Add CSP, Permissions-Policy, COEP/COOP meta tags
+**3. background.js**: Header analysis, privacy injection
+**4. SecurityHeadersAnalyzer.res**: ReScript module for header parsing
+**5. Lens.res**: Filter URLs by security score
+
+== References
+
+- MDN: Content Security Policy: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+- MDN: Permissions Policy: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
+- Chrome Extension webRequest API: https://developer.chrome.com/docs/extensions/reference/webRequest/
+- Global Privacy Control spec: https://globalprivacycontrol.org/
+
+---
+
+**Bottom line**: Security headers are very applicable! We can use them to:
+1. Harden our own extension (essential)
+2. Analyze platform security (educational)
+3. Enhance privacy during membrane crossing (advanced)
+
+This is a powerful tool for both security and privacy resistance.

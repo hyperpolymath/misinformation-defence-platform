@@ -1,0 +1,198 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Proven + Ephapax Integration Plan
+
+Algorithm Shield will use Ephapax for performance-critical hot paths in v2.0+. To maintain unbreakable code guarantees, we need proven library bindings for Ephapax.
+
+== Current Status (v1.0)
+
+* ✅ **Rust bindings**: proven-rs (38 modules)
+* ✅ **ReScript bindings**: @hyperpolymath/proven-rescript (87 modules)
+* ⏳ **Ephapax bindings**: Not yet implemented (required for v2.0)
+
+== Requirements for v2.0
+
+=== Bidirectional Zig FFI/ABI - WASM Compatible
+
+✅ **Ephapax compiles directly to WASM** - perfect for browser extensions!
+
+proven's core is written in Idris2 with Zig FFI bridge. Ephapax compiles to WASM and uses linear types. Integration path:
+
+```
+Idris2 (proven core)
+  ↓ (verified exports)
+Zig FFI bridge (libephapax_proven.so ✅ BUILT)
+  ↓ (C ABI)
+Ephapax (Algorithm Shield hot paths)
+  ↓ (compiles to WASM ✅)
+Browser WASM runtime
+
+All layers compile to WASM = works in browser!
+```
+
+**Status Update (2026-01-24):**
+- ✅ Zig FFI bridge built: `/var/mnt/eclipse/repos/proven/ffi/zig/zig-out/lib/libproven.so`
+- ✅ Ephapax bindings built: `/var/mnt/eclipse/repos/proven/bindings/ephapax/libephapax_proven.so`
+- ✅ All tests passing (see BUILD-SUCCESS.md)
+- ✅ Ready for integration in Algorithm Shield v2.0
+
+=== Critical Modules for Algorithm Shield
+
+| Module | Use in Algorithm Shield | Priority |
+|--------|-------------------------|----------|
+| **SafeJson** | Rule parsing, context serialization | **CRITICAL** |
+| **SafeString** | URL generation, DOM manipulation | **CRITICAL** |
+| **SafeMath** | Timing calculations, diversity metrics | **HIGH** |
+| **SafeUrl** | Membrane crossing actions | **HIGH** |
+| **SafeRegex** | Content classification | **MEDIUM** |
+| **SafeStateMachine** | Persona state transitions | **MEDIUM** |
+
+=== Ephapax Language Features Required
+
+Ephapax uses linear types and region-based memory. proven bindings must respect these constraints:
+
+**1. Linear Resource Management**
+```ephapax
+-- Safe JSON parsing with linear types
+fn parse_json_safe(json: String) -> Result<Json, ParseError> @region r {
+  // proven::SafeJson::parse must accept linear String
+  // and return linear Result
+  let! result = proven_safe_json_parse@r(json) in
+  result
+  -- Region exits: O(1) cleanup
+}
+```
+
+**2. Region-Aware Allocations**
+```ephapax
+region r {
+  let! parsed = proven_safe_json_parse@r(input_json) in
+  let! validated = proven_safe_schema_validate@r(parsed, schema) in
+  to_raw_ptr(validated)  -- Escape region if needed
+}
+```
+
+**3. Affine Types for Correctness**
+```ephapax
+-- Prevents use-after-free for JSON values
+fn consume_json(json: Json) -> String {
+  let result = json.to_string();
+  // json is MOVED, cannot be used again (Coq-proven)
+  result
+}
+```
+
+=== Implementation Plan
+
+**Phase 1: Zig Adapter Layer (1 month)**
+```
+proven/bindings/ephapax/
+├── README.md
+├── zig_bridge/
+│   ├── safe_json.zig      # FFI wrapper for SafeJson
+│   ├── safe_string.zig    # FFI wrapper for SafeString
+│   ├── safe_math.zig      # FFI wrapper for SafeMath
+│   └── abi.zig            # C ABI definitions
+├── ephapax_src/
+│   ├── Proven_SafeJson.eph
+│   ├── Proven_SafeString.eph
+│   └── Proven_SafeMath.eph
+└── examples/
+    └── rule_engine_example.eph
+```
+
+**Phase 2: Linear Type Wrappers (1 month)**
+- Create Ephapax wrappers that enforce linear/affine constraints
+- Prove memory safety via Coq (no use-after-free, no leaks)
+- Benchmark: Ensure overhead < 5%
+
+**Phase 3: Integration Testing (2 weeks)**
+- Test JSON parsing with 1MB+ payloads
+- Test string escaping for HTML/SQL/URL injection prevention
+- Test math operations for overflow detection
+- Validate region cleanup is O(1)
+
+**Phase 4: Algorithm Shield Integration (v2.0 - Dec 2026)**
+- Replace Rust JSON parsing with Ephapax + proven
+- Replace Rust string operations with Ephapax + proven
+- Measure performance improvement (target: 1.8× speedup)
+- Verify WASM size reduction (target: 140KB from 180KB)
+
+== Example: Safe JSON Parsing in Ephapax
+
+**Current (Rust with proven):**
+```rust
+use proven::SafeJson;
+
+let rule: Rule = SafeJson::parse(rule_json)
+    .map_err(|e| format!("Parse error: {}", e))?;
+```
+
+**Future (Ephapax with proven):**
+```ephapax
+import Proven.SafeJson
+
+fn parse_rule(json: String) -> Result<Rule, String> @region r {
+  match SafeJson.parse@r(json) {
+    Ok(value) => validate_rule@r(value),
+    Err(err) => Err("Parse error: " ++ err.to_string())
+  }
+  -- Region cleanup: O(1), Coq-proven safe
+}
+```
+
+== Verification Stack (v2.0)
+
+```
+Layer 4: SPARK (Cerro Torre)  - Cryptographic ops proven
+Layer 3: Coq (Ephapax)         - Memory safety proven
+Layer 2: Idris2 (proven)       - Core operations proven crash-free
+Layer 1: Idris2 (Vörðr)        - Container lifecycle proven
+```
+
+**Result**: Four-layer mathematical verification - deepest in browser extension history.
+
+== Dependencies
+
+=== In proven repo (to be created):
+1. `bindings/ephapax/` directory
+2. Zig FFI adapter for Ephapax C ABI
+3. Ephapax language bindings for 38 core modules
+4. Coq proofs for linear type correctness
+
+=== In Algorithm Shield repo (this repo):
+1. Update `src/ephapax/` (v2.0) to use proven bindings
+2. Replace direct JSON/string ops with proven calls
+3. Benchmark and validate performance targets
+
+== Timeline
+
+| Milestone | Date | Owner |
+|-----------|------|-------|
+| Proven Ephapax bindings design | Mar 2026 | proven maintainer |
+| Zig FFI adapter implementation | Apr-May 2026 | proven maintainer |
+| Ephapax wrapper layer | Jun-Jul 2026 | proven + Algorithm Shield |
+| Coq proofs for linear correctness | Aug 2026 | proven maintainer |
+| Integration in Algorithm Shield v2.0 | Sep-Dec 2026 | Algorithm Shield team |
+
+== Open Questions
+
+1. **Linear type escape hatch**: How to convert linear values to unrestricted when crossing FFI boundary?
+2. **Region size limits**: What's max region size for browser WASM?
+3. **Error handling**: How to propagate proven errors through Ephapax linear types?
+4. **Serialization**: Can we serialize linear values without consuming them?
+
+== References
+
+- proven repo: https://github.com/hyperpolymath/proven
+- Ephapax repo: https://github.com/hyperpolymath/ephapax
+- Algorithm Shield v2.0 roadmap: link:ROADMAP.adoc[]
+- Ephapax performance analysis: link:EPHAPAX-PERFORMANCE.adoc[]
+- Containerization architecture: link:CONTAINERIZATION-ANALYSIS.adoc[]
+
+---
+
+_Created: 2026-01-24_
+_Status: Planning (for v2.0)_

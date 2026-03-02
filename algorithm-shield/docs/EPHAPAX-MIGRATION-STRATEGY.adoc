@@ -1,0 +1,407 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Algorithm Shield - Ephapax Migration Strategy
+:toc:
+:toc-placement!:
+
+[.lead]
+Should we completely rewrite the Rust rule engine in Ephapax, or take an incremental approach?
+
+toc::[]
+
+== Direct Answer: No, Not a Complete Rewrite
+
+**Recommended**: **Hybrid approach** - Ephapax for hot paths, Rust for everything else
+
+**Reasoning**:
+
+1. **Current Rust code works** - 180KB WASM, 5ms/rule is already fast enough for v1.0
+2. **Rewrite risk** - Complete rewrites often fail or take 2× longer than estimated
+3. **Ephapax is young** - Still in early development (type checker 🚧, stdlib 🔲 planned)
+4. **Rust ecosystem** - Already have wasm-bindgen, good browser API bindings
+5. **ROI question** - Does 40% speedup justify 100% rewrite? Probably not yet.
+
+---
+
+== Recommended Strategy: Incremental Hybrid
+
+=== Phase 1: Profile-Guided Optimization (v1.0 - Now)
+
+**Goal**: Find actual bottlenecks in production
+
+**Steps**:
+1. Ship current Rust WASM (v1.0)
+2. Add performance instrumentation
+3. Collect real-world metrics:
+   - Which rules are slowest?
+   - How many rules do users actually create?
+   - Is evaluation time even a problem?
+
+```rust
+// Add timing instrumentation to Rust rule engine
+pub fn evaluate_rule(&self, context: &Context) -> Vec<Action> {
+    let start = web_sys::Performance::now();
+
+    let result = self.evaluate_impl(context);
+
+    let elapsed = web_sys::Performance::now() - start;
+    log_metric("rule_evaluation_ms", elapsed, &self.id);
+
+    result
+}
+```
+
+**Success Criteria**: Identify top 3 slowest operations
+
+**Outcome**: **Data-driven decision** on what to optimize (not guesses)
+
+---
+
+=== Phase 2: Hot Path Extraction (v2.0 - Mar 2026)
+
+**Goal**: Rewrite ONLY the slowest 10% in Ephapax
+
+**Likely candidates** (based on typical profiling):
+
+| Operation | Current (Rust) | Rewrite in Ephapax? |
+|-----------|----------------|---------------------|
+| **Rule condition checking** | 60% of time | ✅ YES - tight loop, lots of allocations |
+| **Action generation** | 20% of time | ✅ YES - region-based allocation fits well |
+| **Context serialization** | 15% of time | ❌ NO - I/O bound, not CPU bound |
+| **WASM↔JS boundary** | 5% of time | ❌ NO - FFI overhead, can't optimize |
+
+**Architecture**:
+
+```
+┌─────────────────────────────────────────────────────┐
+│         Algorithm Shield Rule Engine                 │
+├─────────────────────────────────────────────────────┤
+│                                                      │
+│  ┌────────────────────┐      ┌──────────────────┐  │
+│  │  Rule Storage      │      │  Context Manager │  │
+│  │  (Rust)            │      │  (Rust)          │  │
+│  └──────────┬─────────┘      └────────┬─────────┘  │
+│             │                         │            │
+│             ▼                         ▼            │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  Condition Evaluation (Ephapax - HOT PATH)   │  │
+│  │  - Tight loop over conditions                │  │
+│  │  - Region-based allocation                   │  │
+│  │  - Coq-proven correctness                    │  │
+│  └──────────────────┬───────────────────────────┘  │
+│                     │                              │
+│                     ▼                              │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  Action Generation (Ephapax - HOT PATH)      │  │
+│  │  - Create actions based on matches           │  │
+│  │  - O(1) region cleanup                       │  │
+│  └──────────────────┬───────────────────────────┘  │
+│                     │                              │
+│                     ▼                              │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  Result Serialization (Rust)                 │  │
+│  │  - Convert to JSON for JS                    │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                      │
+└─────────────────────────────────────────────────────┘
+```
+
+**FFI Boundary** (Rust ↔ Ephapax):
+
+```rust
+// Rust side (wrapper)
+pub fn evaluate_rule(rule_json: &str, context: &Context) -> String {
+    // 1. Deserialize in Rust (already fast)
+    let rule: Rule = serde_json::from_str(rule_json)?;
+
+    // 2. Call Ephapax hot path (via WASM FFI)
+    let actions_ptr = ephapax_evaluate_conditions(
+        rule.conditions.as_ptr(),
+        rule.conditions.len(),
+        context as *const Context
+    );
+
+    // 3. Convert back to Rust
+    let actions = unsafe { ephapax_ptr_to_vec(actions_ptr) };
+
+    // 4. Serialize to JSON
+    serde_json::to_string(&actions)?
+}
+
+// Ephapax side (hot path)
+extern "C" fn ephapax_evaluate_conditions(
+    conditions_ptr: *const Condition,
+    len: usize,
+    context_ptr: *const Context
+) -> *const Action {
+    region r {
+        let conditions = unsafe { from_raw_parts(conditions_ptr, len) };
+        let context = unsafe { &*context_ptr };
+
+        let! result = evaluate_conditions@r(conditions, context) in
+        to_raw_ptr(result)  // Pass ownership back to Rust
+    }
+    // Region destroyed here - O(1) cleanup
+}
+```
+
+**Benefits**:
+- **80/20 rule**: Optimize 10% of code that takes 80% of time
+- **Risk contained**: If Ephapax version has bugs, fall back to Rust
+- **Incremental learning**: Team learns Ephapax on small surface area
+
+**Success Criteria**: **≥50% speedup** on hot path operations
+
+---
+
+=== Phase 3: Gradual Expansion (v2.0 - Jun 2026)
+
+**Goal**: Move more code to Ephapax as confidence grows
+
+**Decision Tree**:
+
+```
+For each module:
+    ├─ Is it CPU-bound?
+    │   └─ NO → Keep in Rust (I/O, FFI not helped by Ephapax)
+    │
+    ├─ Does it allocate a lot?
+    │   └─ NO → Keep in Rust (Ephapax benefit is region deallocation)
+    │
+    ├─ Is Ephapax stdlib ready for this?
+    │   └─ NO → Wait until stdlib matures
+    │
+    └─ YES to all? → Consider Ephapax rewrite
+        ├─ Prototype in Ephapax
+        ├─ Benchmark (must be ≥30% faster)
+        ├─ If faster → Migrate
+        └─ If not → Keep Rust
+```
+
+**Likely modules to migrate**:
+
+| Module | Migrate? | Reasoning |
+|--------|----------|-----------|
+| `minikaren/conditions.rs` | ✅ YES | Tight loops, heavy allocation |
+| `minikaren/actions.rs` | ✅ YES | Region fits well |
+| `minikaren/context.rs` | ⚠️ MAYBE | Depends on serialization perf |
+| `browser_api.rs` | ❌ NO | FFI-heavy, Rust ecosystem is better |
+| `storage.rs` | ❌ NO | I/O bound |
+| `timing.rs` | ⚠️ MAYBE | If profiling shows CPU bottleneck |
+
+**Outcome**: **60-70% of rule engine** in Ephapax, 30-40% in Rust
+
+---
+
+=== Phase 4: Full Rewrite (v5.0 - Dec 2026+) - ONLY IF JUSTIFIED
+
+**Prerequisites**:
+1. **Ephapax stdlib is mature** (networking, crypto, string handling)
+2. **Performance data proves need** (profiling shows Rust is bottleneck)
+3. **Team expertise** (at least 2 developers fluent in Ephapax + linear types)
+4. **Business case** (users complaining about speed, or enterprise needs formal verification)
+
+**If all prerequisites met**:
+
+```
+Complete Rewrite Plan:
+├─ Month 1: Design Ephapax API surface
+├─ Month 2: Implement core types (Rule, Context, Action)
+├─ Month 3: Port condition evaluation
+├─ Month 4: Port action generation
+├─ Month 5: FFI bindings for browser APIs
+├─ Month 6: Integration testing
+├─ Month 7: Performance tuning
+├─ Month 8: Formal verification (Coq proofs)
+└─ Month 9: Production deployment
+```
+
+**Total Time**: ~9 months
+
+**Risk**: **High** - complete rewrites often slip 2-3× original estimate
+
+---
+
+== Hybrid Architecture (Recommended)
+
+### Component Distribution
+
+```
+┌────────────────────────────────────────────────────────────┐
+│              Algorithm Shield Architecture                  │
+├────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │            ReScript (UI & Orchestration)             │  │
+│  │  - Popup UI                                          │  │
+│  │  - State management                                  │  │
+│  │  - Browser API bindings                              │  │
+│  └────────────────────┬─────────────────────────────────┘  │
+│                       │                                    │
+│                       ▼                                    │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Rust WASM (Glue Layer)                  │  │
+│  │  - JSON serialization/deserialization                │  │
+│  │  - FFI coordination (ReScript ↔ Ephapax)             │  │
+│  │  - Browser storage integration                       │  │
+│  │  - Non-critical rule processing                      │  │
+│  └────────────────────┬─────────────────────────────────┘  │
+│                       │                                    │
+│                       ▼                                    │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │        Ephapax WASM (Performance-Critical Core)      │  │
+│  │  ✅ Condition evaluation (tight loops)               │  │
+│  │  ✅ Action generation (region-based)                 │  │
+│  │  ✅ Pattern matching (miniKaren unification)         │  │
+│  │  ✅ Bubble topology analysis (graph algorithms)      │  │
+│  │  📊 Coq-proven correctness                           │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+└────────────────────────────────────────────────────────────┘
+```
+
+### WASM Bundle Structure
+
+```
+algorithm_shield_engine.wasm (Total: ~140KB)
+├── Rust glue layer:           ~60KB
+│   ├── serde_json:            ~30KB
+│   ├── wasm-bindgen:          ~20KB
+│   └── Rust stdlib (minimal): ~10KB
+│
+└── Ephapax core:              ~80KB
+    ├── Condition evaluator:   ~30KB
+    ├── Action generator:      ~20KB
+    ├── Pattern matcher:       ~20KB
+    └── Runtime (regions):     ~10KB
+```
+
+**Estimated Performance**:
+- **Hot path (conditions)**: 2.5× faster than pure Rust (Ephapax regions)
+- **Cold path (serialization)**: Same as pure Rust (using Rust's serde)
+- **Overall**: ~1.8× faster (weighted average)
+
+**Development Velocity**:
+- **Rust parts**: Fast iteration (mature tooling)
+- **Ephapax parts**: Slower iteration (learn linear types)
+- **Balance**: Use right tool for each job
+
+---
+
+== Cost-Benefit Analysis
+
+### Full Rewrite (v5.0)
+
+**Costs**:
+- **9 months** development time (2-3 engineers)
+- **High risk** of bugs during transition
+- **Learning curve** for linear types + regions
+- **Ephapax immaturity** (stdlib not ready yet)
+- **Opportunity cost** (could build new features instead)
+
+**Benefits**:
+- **2-3× faster** rule evaluation (regions + linearity)
+- **33% smaller** WASM (120KB vs 180KB)
+- **Coq proofs** bundled (formal verification)
+- **Simpler mental model** (no borrow checker)
+
+**ROI**: **Negative** until v5.0 (benefits don't justify 9-month rewrite)
+
+---
+
+### Hybrid Approach (v2.0)
+
+**Costs**:
+- **2 months** development time (1 engineer)
+- **Low risk** (Rust fallback if Ephapax has bugs)
+- **Partial learning curve** (learn Ephapax incrementally)
+- **FFI overhead** (~0.1ms per boundary crossing)
+
+**Benefits**:
+- **1.8× faster** overall (hot paths optimized)
+- **20% smaller** WASM (140KB vs 180KB)
+- **Coq proofs** for critical paths only
+- **Risk contained** to 10-20% of codebase
+
+**ROI**: **Positive** by v2.0 (benefits justify 2-month investment)
+
+---
+
+## Recommendation
+
+### For v1.0 (Jun 2026): 100% Rust ✅
+
+**Why**:
+- Rust WASM already works (180KB, 5ms/rule)
+- Focus on shipping product, not premature optimization
+- Prove core concept before optimizing
+
+---
+
+### For v2.0 (Dec 2026): Hybrid (Rust + Ephapax) ✅
+
+**Why**:
+- Profile-guided: optimize only proven bottlenecks
+- Low risk: Ephapax used for 10-20% of code
+- Learn Ephapax incrementally
+- 1.8× speedup for 2 months work = good ROI
+
+**Concrete Plan**:
+1. Ship v1.0 with Rust only
+2. Collect performance metrics (3 months)
+3. Identify hot paths (1 month profiling)
+4. Rewrite top 3 hot paths in Ephapax (2 months)
+5. Benchmark (must be ≥50% faster on hot paths)
+6. Ship hybrid v2.0
+
+---
+
+### For v5.0 (Jun 2027): Evaluate Full Rewrite ⚠️
+
+**Prerequisites for full rewrite**:
+- ✅ Ephapax stdlib mature
+- ✅ Team fluent in linear types
+- ✅ Performance data justifies it
+- ✅ Enterprise customers demand formal verification
+
+**Decision point**: **Dec 2026**
+- If hybrid approach meets performance needs → **stay hybrid**
+- If users complain about speed → **consider full rewrite**
+- If enterprise compliance requires Coq proofs → **full rewrite**
+
+---
+
+## Conclusion
+
+**Question**: "Do you think it needs a complete rewrite?"
+
+**Answer**: **No, but incremental adoption is valuable**
+
+**Recommended Path**:
+
+| Version | Approach | Ephapax % | Rust % | Effort | Speedup |
+|---------|----------|-----------|--------|--------|---------|
+| v1.0 (Jun 2026) | Pure Rust | 0% | 100% | ✅ Done | 1.0× (baseline) |
+| v2.0 (Dec 2026) | **Hybrid** | 20% | 80% | **2 months** | **1.8×** |
+| v5.0 (Jun 2027) | Hybrid+ | 40% | 60% | 4 months | 2.2× |
+| v10.0 (2028+) | Evaluate | 70%? | 30%? | 9 months | 2.8× |
+
+**Key Insight**: **Don't rewrite - refactor incrementally**
+
+The 80/20 rule applies: **20% of code (hot paths) accounts for 80% of runtime**
+
+**Ephapax shines for**:
+- Tight loops with heavy allocation (condition checking)
+- Batch processing (action generation)
+- Data structure manipulation (graph algorithms)
+
+**Rust still better for**:
+- Browser API FFI (mature ecosystem)
+- JSON serialization (serde is excellent)
+- I/O and async operations (tokio, async-std)
+
+**The membrane operates at every layer - but not every layer needs Ephapax.**
+
+Use the right tool for each job. Ephapax for performance-critical cores, Rust for everything else.

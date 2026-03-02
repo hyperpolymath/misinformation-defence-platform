@@ -1,0 +1,4 @@
+replicaCount: 3
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"

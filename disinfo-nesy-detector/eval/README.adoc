@@ -1,0 +1,360 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-FileCopyrightText: 2024 Hyperpolymath
+
+= Evaluation Pipeline for Neuro-Symbolic Disinformation Detector
+:toc: auto
+:toclevels: 3
+
+== Overview
+
+This evaluation pipeline provides a reproducible framework for benchmarking disinformation detection models. It includes:
+
+* **Dataset loaders** for standard benchmarks (LIAR, ISOT, FEVER)
+* **Evaluation metrics** (Accuracy, Precision, Recall, F1, MCC, AUC-ROC)
+* **Baseline models** (Random, Majority, Stratified, TF-IDF, Keyword)
+* **Reproducible pipeline** with seeded randomness
+
+== Quick Start
+
+[source,bash]
+----
+# Build the evaluation crate
+cd eval
+cargo build --release
+
+# Run evaluation with synthetic dataset (default)
+cargo run --release --bin eval-pipeline
+
+# Run with specific dataset
+cargo run --release --bin eval-pipeline -- --dataset liar --path ./datasets/liar
+
+# Or use the convenience script
+./scripts/run-eval.sh --dataset synthetic --seed 42
+----
+
+== Datasets
+
+=== Supported Datasets
+
+|===
+| Dataset | Description | Size | Labels
+
+| **LIAR**
+| Political statements from PolitiFact
+| 12,836 statements
+| 6-class (mapped to binary)
+
+| **ISOT**
+| Real and fake news articles
+| 44,898 articles
+| Binary (fake/real)
+
+| **FEVER**
+| Fact verification against Wikipedia
+| 165,447 claims
+| 3-class (mapped to binary)
+
+| **Synthetic**
+| Generated test dataset
+| Configurable
+| Binary
+|===
+
+=== Dataset Download
+
+[source,bash]
+----
+# Download available datasets
+cargo run --release --bin download-datasets -- --datasets liar
+
+# List all options
+cargo run --release --bin download-datasets -- --help
+----
+
+NOTE: Some datasets (ISOT, FakeNewsNet) require manual download due to access restrictions. See the download tool output for instructions.
+
+=== Binary Label Mapping
+
+Datasets with multi-class labels are mapped to binary:
+
+[source,json]
+----
+{
+  "liar": {
+    "disinformation": ["pants-fire", "false", "barely-true"],
+    "authentic": ["half-true", "mostly-true", "true"]
+  },
+  "fever": {
+    "disinformation": ["REFUTES"],
+    "authentic": ["SUPPORTS"],
+    "uncertain": ["NOT ENOUGH INFO"]
+  }
+}
+----
+
+== Metrics
+
+=== Classification Metrics
+
+|===
+| Metric | Description | Range
+
+| **Accuracy**
+| Overall correct predictions
+| [0, 1]
+
+| **Balanced Accuracy**
+| Average of sensitivity and specificity
+| [0, 1]
+
+| **Precision**
+| TP / (TP + FP)
+| [0, 1]
+
+| **Recall (Sensitivity)**
+| TP / (TP + FN)
+| [0, 1]
+
+| **Specificity**
+| TN / (TN + FP)
+| [0, 1]
+
+| **F1 Score**
+| Harmonic mean of precision and recall
+| [0, 1]
+
+| **F2 Score**
+| Weighted F-score favoring recall
+| [0, 1]
+
+| **MCC**
+| Matthews Correlation Coefficient
+| [-1, 1]
+|===
+
+=== Probabilistic Metrics
+
+|===
+| Metric | Description | Range
+
+| **AUC-ROC**
+| Area under ROC curve
+| [0, 1]
+
+| **Average Precision**
+| Area under precision-recall curve
+| [0, 1]
+
+| **Brier Score**
+| Calibration metric (lower is better)
+| [0, 1]
+|===
+
+== Baseline Models
+
+=== Available Baselines
+
+. **Random**: Uniform random predictions (expected accuracy: 50%)
+. **Majority**: Always predicts the most common training class
+. **Stratified**: Predicts proportionally to training class distribution
+. **TF-IDF**: TF-IDF weighted Naive Bayes classifier
+. **Keyword**: Hand-crafted keyword matching baseline
+
+=== Running Baselines
+
+[source,bash]
+----
+# List available baselines
+cargo run --release --bin run-baseline -- --list
+
+# Run specific baseline
+cargo run --release --bin run-baseline -- --model TF-IDF --dataset synthetic
+
+# Run all baselines on LIAR dataset
+cargo run --release --bin run-baseline -- --dataset liar --path ./datasets/liar
+----
+
+== Pipeline Usage
+
+=== Command Line Options
+
+[source]
+----
+eval-pipeline [OPTIONS]
+
+OPTIONS:
+  -d, --dataset <DATASET>    Dataset to evaluate (synthetic, liar, isot) [default: synthetic]
+  -p, --path <PATH>          Path to dataset directory
+  -s, --seed <SEED>          Random seed for reproducibility [default: 42]
+      --split <SPLIT>        Evaluation split (train, validation, test) [default: test]
+  -b, --baselines <NAMES>    Comma-separated baseline names (empty = all)
+  -o, --output <DIR>         Output directory for results [default: eval/results]
+  -f, --format <FORMAT>      Output format (json, markdown, both) [default: both]
+  -h, --help                 Print help
+----
+
+=== Example Runs
+
+[source,bash]
+----
+# Quick synthetic evaluation
+cargo run --release --bin eval-pipeline
+
+# Full LIAR evaluation with specific seed
+cargo run --release --bin eval-pipeline -- \
+  --dataset liar \
+  --path ./datasets/liar \
+  --seed 12345 \
+  --split test
+
+# Evaluate only TF-IDF and Keyword baselines
+cargo run --release --bin eval-pipeline -- \
+  --baselines "TF-IDF,Keyword" \
+  --format json
+----
+
+== Output Format
+
+=== JSON Results
+
+[source,json]
+----
+{
+  "config": {
+    "seed": 42,
+    "dataset_id": "synthetic",
+    "eval_split": "test"
+  },
+  "dataset_info": {
+    "id": "synthetic",
+    "name": "Synthetic Test Dataset",
+    "total_samples": 1000,
+    "train_samples": 800,
+    "test_samples": 100
+  },
+  "baseline_results": [...],
+  "summary": {
+    "best_model": "TF-IDF",
+    "best_f1": 0.7234,
+    "baseline_comparison": [...]
+  },
+  "timestamp": "2024-12-27T12:00:00Z"
+}
+----
+
+=== Markdown Report
+
+The pipeline generates a human-readable markdown report with:
+
+* Dataset summary
+* Best model identification
+* Baseline comparison table
+* Detailed per-model metrics
+* Configuration used
+
+== Reproducibility
+
+=== Seeded Randomness
+
+All random operations use a seeded ChaCha8 RNG:
+
+[source,rust]
+----
+use rand_chacha::ChaCha8Rng;
+use rand::SeedableRng;
+
+let rng = ChaCha8Rng::seed_from_u64(42);
+----
+
+=== Deterministic Splits
+
+Datasets are split deterministically based on sample IDs, ensuring consistent train/validation/test splits across runs.
+
+=== Versioned Results
+
+All results include:
+
+* Pipeline version
+* Timestamp
+* Full configuration
+* SHA256 of dataset files (when available)
+
+== Directory Structure
+
+[source]
+----
+eval/
+├── Cargo.toml              # Rust dependencies
+├── README.adoc             # This file
+├── datasets/
+│   ├── datasets.json       # Dataset definitions
+│   ├── liar/               # LIAR dataset files
+│   └── isot/               # ISOT dataset files
+├── results/                # Evaluation outputs
+├── scripts/
+│   └── run-eval.sh         # Convenience runner
+└── src/
+    ├── lib.rs              # Library root
+    ├── main.rs             # Pipeline CLI
+    ├── download.rs         # Dataset downloader
+    ├── baseline.rs         # Baseline runner
+    ├── datasets.rs         # Dataset loading
+    ├── metrics.rs          # Evaluation metrics
+    ├── baselines.rs        # Baseline models
+    └── pipeline.rs         # Pipeline orchestration
+----
+
+== Adding New Datasets
+
+. Add dataset definition to `datasets/datasets.json`
+. Implement loader in `src/datasets.rs`:
++
+[source,rust]
+----
+impl Dataset {
+    pub fn load_mydataset(data_dir: &Path) -> Result<Self> {
+        // Parse files, map labels, split data
+        Ok(Self { config, train, validation, test })
+    }
+}
+----
+. Update CLI to recognize new dataset ID
+
+== Adding New Baselines
+
+. Implement `BaselineModel` trait in `src/baselines.rs`:
++
+[source,rust]
+----
+impl BaselineModel for MyBaseline {
+    fn train(&mut self, samples: &[Sample]) { ... }
+    fn predict(&self, sample: &Sample) -> Prediction { ... }
+    fn name(&self) -> &str { "MyBaseline" }
+    fn description(&self) -> &str { "My custom baseline" }
+}
+----
+. Add to `all_baselines()` factory function
+
+== Integration with Main Detector
+
+The evaluation pipeline is designed to benchmark the full NeSy detector:
+
+[source,rust]
+----
+// Future integration point
+impl BaselineModel for NeSyDetector {
+    fn predict(&self, sample: &Sample) -> Prediction {
+        // Run ONNX inference + Datalog reasoning
+        let features = self.onnx.infer(&sample.text);
+        let verdict = self.souffle.reason(&features);
+        Prediction {
+            label: verdict.to_label(),
+            probability: features.fakeness_score,
+        }
+    }
+}
+----
+
+== License
+
+AGPL-3.0-or-later

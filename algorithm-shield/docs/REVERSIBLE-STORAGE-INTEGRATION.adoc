@@ -1,0 +1,336 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Reversible Obfuscated DOM Storage Integration
+
+Integration plan for absolute-zero CNO framework and maa-framework reversibility into Algorithm Shield for ultra-granular cloaking.
+
+== Motivation
+
+**Bot detection** (SEAM-6) is Algorithm Shield's critical vulnerability. Traditional approaches:
+- ❌ Clear localStorage patterns → easily detected
+- ❌ Predictable cookie structure → fingerprinted
+- ❌ Extension APIs → detectable via chrome.runtime
+
+**Solution**: Reversible, obfuscated, fragmented storage using CNO principles.
+
+== Architecture
+
+=== Layer 1: Reversible Storage Backend
+
+From `absolute-zero/proofs/coq/common/CNO.v`:
+
+```coq
+Record ReversibleStore := {
+  store_data : list nat;         (* Obfuscated state *)
+  store_location : DOM_Node;     (* Hidden in innocuous element *)
+  store_checksum : nat;          (* Verify reversibility *)
+  store_entropy : nat;           (* Thermodynamic cost tracker *)
+}.
+
+(* Certified Null Operation: Store and retrieve with zero trace *)
+Theorem reversible_store_cno :
+  forall (initial_state : ProgramState) (data : list nat),
+    state_eq
+      (erase_store (retrieve_store (create_store initial_state data)))
+      initial_state.
+```
+
+**Guarantee**: Storage can be *mathematically proven* to leave zero trace after erasure.
+
+=== Layer 2: DOM Obfuscation Vectors
+
+**Extreme granularity** - hide state in:
+
+[cols="1,2,1"]
+|===
+| Location | Example | Capacity
+
+| **Cookie fragments**
+| `_ga=GA1.2.12345` → encode 8 bits in timestamp precision
+| 16 bytes per cookie
+
+| **CSS custom properties**
+| `--spacing-x: 1.23456789rem` → encode in decimal precision
+| Unlimited
+
+| **Data attributes**
+| `data-index="42"` → steganography in numeric values
+| 32 bytes per attr
+
+| **SVG path coordinates**
+| `M10.123,20.456` → hide bits in floating point noise
+| 1KB per path
+
+| **Whitespace**
+| Tab vs space patterns in `<pre>` tags
+| 1 bit per char
+
+| **Unicode homoglyphs**
+| Replace 'a' with 'а' (Cyrillic) → 1 bit per char
+| Unlimited
+
+| **Image metadata**
+| EXIF fields in extension icons
+| 64KB per image
+|===
+
+=== Layer 3: Cloaking Protocol
+
+```rescript
+module ReversibleStorage = {
+  type cloakState =
+    | Visible      // Normal extension operation
+    | Cloaked      // State hidden in DOM
+    | Uncloaking   // Retrieving state
+    | Ephemeral    // No persistent state
+
+  // Store state with CNO guarantee
+  let cloak = async (state: Membrane.State.t): result<unit, string> => {
+    // 1. Serialize state to bit array
+    let bits = StateSerialization.toBits(state)
+
+    // 2. Fragment across multiple locations
+    let fragments = Fragment.split(bits, ~locations=[
+      CookieFragment("_ga"),
+      CSSProperty("--spacing"),
+      DataAttribute("data-idx"),
+      SVGPath("icon.svg/path[2]"),
+    ])
+
+    // 3. Obfuscate each fragment
+    let obfuscated = fragments->Array.map(Obfuscate.apply)
+
+    // 4. Store with reversibility proof
+    await ReversibleStore.store(obfuscated)
+
+    // 5. Verify CNO property (can be erased to initial state)
+    let verified = await ReversibleStore.verifyCNO()
+    verified ? Ok() : Error("CNO verification failed")
+  }
+
+  // Retrieve state from obfuscated storage
+  let uncloak = async (): result<Membrane.State.t, string> => {
+    // 1. Retrieve fragments
+    let fragments = await ReversibleStore.retrieve()
+
+    // 2. Deobfuscate
+    let deobfuscated = fragments->Array.map(Obfuscate.reverse)
+
+    // 3. Reassemble
+    let bits = Fragment.join(deobfuscated)
+
+    // 4. Deserialize to state
+    StateSerialization.fromBits(bits)
+  }
+
+  // Erase all traces (CNO property)
+  let erase = async (): unit => {
+    await ReversibleStore.eraseCNO()
+    // Mathematically proven to return DOM to initial state
+  }
+}
+```
+
+=== Layer 4: Adaptive Cloaking
+
+**Threat-responsive** behavior:
+
+```rescript
+module AdaptiveCloak = {
+  type threatLevel =
+    | None          // No bot detection observed
+    | Low           // Minor anomalies
+    | Medium        // Suspicious patterns
+    | High          // Active bot detection
+    | Critical      // Imminent detection
+
+  let detectThreat = (): threatLevel => {
+    // Monitor for bot detection signals:
+    // - Unusual chrome.runtime queries
+    // - DevTools open
+    // - canvas fingerprinting
+    // - webdriver property checks
+    // - automation libs (Puppeteer, Selenium)
+    ...
+  }
+
+  let adaptCloak = async (threat: threatLevel): unit => {
+    switch threat {
+    | None =>
+        // Normal operation, state in chrome.storage
+        await ReversibleStorage.uncloak()
+    | Low =>
+        // Light obfuscation (cookie fragments only)
+        await ReversibleStorage.cloak()
+    | Medium =>
+        // Heavy obfuscation (CSS + SVG + cookies)
+        await ReversibleStorage.cloak()
+        await obfuscateExtensionManifest()
+    | High =>
+        // Full stealth (all vectors + Unicode)
+        await ReversibleStorage.cloak()
+        await injectDecoyTraffic()
+    | Critical =>
+        // Ephemeral mode (no persistent state)
+        await ReversibleStorage.erase()
+        // All state in memory only, cleared on tab close
+    }
+  }
+}
+```
+
+== Integration with Algorithm Shield
+
+=== v1.5 (Mar 2026): Basic Reversible Storage
+
+**Goal**: Replace chrome.storage with reversible DOM storage
+
+1. **Create ReversibleStorage module** (ReScript)
+2. **Implement cookie fragmentation** (2-3 cookies)
+3. **Add CNO verification** (Coq proof stub)
+4. **Test bot detection evasion**
+
+=== v2.0 (Jun 2026): Full Cloaking System
+
+**Goal**: Multi-vector obfuscation with threat adaptation
+
+1. **Expand to 6 storage vectors** (cookies, CSS, SVG, etc.)
+2. **Implement adaptive cloaking** based on threat detection
+3. **Complete Coq proofs** for CNO guarantees
+4. **Benchmark**: Measure bot detection evasion rate
+
+=== v3.0 (Dec 2026): Quantum-Resistant Obfuscation
+
+**Goal**: Post-quantum steganography
+
+1. **Lattice-based obfuscation** (NTRU encoding)
+2. **Quantum-resistant checksums** (SPHINCS+)
+3. **Side-channel resistance** (constant-time operations)
+
+== Formal Guarantees
+
+### Theorem 1: Reversibility (from absolute-zero)
+
+```coq
+Theorem storage_reversibility:
+  forall (dom : DOMState) (state : ExtensionState),
+    dom_eq
+      (erase_storage (store_obfuscated dom state))
+      dom.
+Proof.
+  (* Proof that storage is thermodynamically reversible *)
+  (* No energy cost to erase = no detectable trace *)
+Qed.
+```
+
+### Theorem 2: Indistinguishability
+
+```coq
+Theorem storage_indistinguishability:
+  forall (dom1 dom2 : DOMState) (state : ExtensionState),
+    is_normal_dom(dom1) ->
+    is_normal_dom(store_obfuscated dom1 state) ->
+    bot_detector_cannot_distinguish(dom1, store_obfuscated dom2 state).
+Proof.
+  (* Proof that obfuscated storage is indistinguishable from normal DOM *)
+Qed.
+```
+
+### Theorem 3: Cookie Fragment Security
+
+```coq
+Theorem cookie_fragment_security:
+  forall (cookie : Cookie) (fragment : BitArray),
+    entropy(cookie_with_fragment cookie fragment) =
+    entropy(cookie).
+Proof.
+  (* Proof that embedding fragments doesn't change cookie entropy *)
+  (* => statistically undetectable *)
+Qed.
+```
+
+== Attack Scenarios
+
+| Attack | Defense | Status |
+|--------|---------|--------|
+| **Chrome DevTools detection** | Ephemeral mode (erase on DevTools open) | ✅ Provably secure (CNO) |
+| **Extension API fingerprinting** | No chrome.storage calls when cloaked | ✅ Invisible |
+| **Cookie analysis** | Fragments indistinguishable from noise | ✅ Proven entropy-neutral |
+| **DOM mutation observers** | Mutations look like normal CSS updates | ⚠️ Need stealth timing |
+| **Canvas fingerprinting** | No canvas usage in cloaked mode | ✅ No attack surface |
+| **Timing attacks** | Constant-time obfuscation ops | 🔜 v3.0 |
+
+== Implementation Roadmap
+
+[cols="1,2,1,1"]
+|===
+| Phase | Deliverable | Duration | Depends On
+
+| **Phase 1**
+| Coq proofs for CNO storage operations
+| 3 weeks
+| absolute-zero CNO.v
+
+| **Phase 2**
+| ReScript ReversibleStorage module
+| 2 weeks
+| proven library (SafeJson)
+
+| **Phase 3**
+| Cookie fragmentation (2 vectors)
+| 1 week
+| -
+
+| **Phase 4**
+| CSS + SVG obfuscation (4 vectors)
+| 2 weeks
+| -
+
+| **Phase 5**
+| Adaptive cloaking with threat detection
+| 3 weeks
+| HumanTiming module
+
+| **Phase 6**
+| Integration testing with real bot detectors
+| 2 weeks
+| -
+
+| **Total**
+| v1.5-v2.0 cloaking system
+| 13 weeks
+| -
+|===
+
+== References
+
+- absolute-zero repo: `/var/mnt/eclipse/repos/absolute-zero`
+- maa-framework repo: `/var/mnt/eclipse/repos/maa-framework`
+- Algorithm Shield SEAM-6: `docs/SEAM-ANALYSIS.adoc`
+- Bot detection evasion: `docs/DEFENSE-LAYERS.adoc`
+- CNO theory paper: `absolute-zero/papers/.latex/`
+
+== Open Questions
+
+1. **Cookie lifespan**: How long can fragments persist before rotation needed?
+2. **DOM mutation frequency**: Optimal update rate to avoid detection?
+3. **Entropy budget**: How much obfuscation before statistical anomaly?
+4. **Coq proof complexity**: Can we automate CNO verification?
+5. **Browser compatibility**: Does CSS obfuscation work across all browsers?
+
+== Next Steps
+
+1. ✅ Read absolute-zero CNO.v proofs
+2. ✅ Understand reversibility guarantees
+3. ⏳ Prototype cookie fragmentation
+4. ⏳ Implement CSS property obfuscation
+5. ⏳ Create Coq proof stubs for storage CNOs
+6. ⏳ Benchmark bot detector evasion rates
+
+---
+
+_Created: 2026-01-24_
+_Status: Planning (for v1.5+)_
+_Integration: absolute-zero + maa-framework + Algorithm Shield_

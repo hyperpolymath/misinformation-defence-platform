@@ -1,0 +1,784 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Algorithm Shield - Competitive Landscape & Differentiation
+:toc:
+:toc-placement!:
+
+[.lead]
+How Algorithm Shield differs from existing privacy/anti-tracking extensions and leverages emerging browser capabilities.
+
+toc::[]
+
+== Existing Tools Analysis
+
+=== Privacy/Tracking Blockers
+
+==== uBlock Origin / Privacy Badger
+**What they do**:
+- Block ad/tracking scripts
+- Filter network requests
+- Static/dynamic filter lists
+
+**Limitation**: Block or allow (binary). No manipulation.
+
+**What we do differently**:
+- Don't just block trackers
+- *Poison the data stream* with false signals
+- Let tracker load, feed it noise
+
+==== Decentraleyes
+**What they do**:
+- Serve CDN resources locally
+- Prevent CDN-based tracking
+
+**Limitation**: Only handles CDN leakage.
+
+**What we do differently**:
+- Address algorithmic profiling, not just tracking
+- Feed-level manipulation
+
+==== Disconnect
+**What they do**:
+- Categorized tracker blocking
+- Visualize tracking attempts
+
+**Limitation**: Still binary block/allow.
+
+**What we do differently**:
+- Continuous spectrum of intervention
+- "Membrane thickness" variable control
+
+---
+
+=== Fingerprinting Resistance
+
+==== Canvas Defender / CanvasBlocker
+**What they do**:
+- Randomize canvas fingerprinting
+- Spoof browser APIs
+
+**Limitation**: One-time randomization. Static identity.
+
+**What we do differently**:
+- *Metamorphic* identity over time
+- Scheduled persona rotation
+- Intentional identity drift
+
+==== AmIUnique Integration Opportunity
+**What they do**:
+- Test fingerprinting uniqueness
+- Show what trackers see
+
+**What we could integrate**:
+- Real-time fingerprint analysis
+- "Uniqueness score" in bubble map
+- Adaptive polymorphism based on uniqueness
+
+**Implementation** (v2.0):
+```rescript
+// Check fingerprint uniqueness
+let checkUniqueness = async () => {
+  // Use AmIUnique API or local fingerprinting
+  let score = await Fingerprint.analyze()
+  if score.uniqueness > 0.95 {
+    // Too unique! Increase noise
+    adjustMembraneThickness(0.8)
+  }
+}
+```
+
+---
+
+=== Click/Behavior Manipulation
+
+==== AdNauseam
+**What they do**:
+- Click every ad in background
+- Poison ad targeting data
+
+**Strength**: Active data poisoning (not passive blocking).
+
+**Limitation**: Only ads. Not organic content recommendations.
+
+**What we do differently**:
+- Extend poisoning to *feed algorithms*
+- Not just ads, but recommended content
+- Timing variation (AdNauseam clicks uniformly)
+
+**Synergy**: Could integrate AdNauseam's click strategy
+
+==== Chaff
+**What they do**:
+- Generate fake search queries
+- Obfuscate real browsing
+
+**Limitation**: Obvious noise pattern. Detectable.
+
+**What we do differently**:
+- *Human-like* timing and patterns
+- Minikaren rules adapt to platform responses
+- Not just random, but strategically confusing
+
+---
+
+=== Browser Isolation
+
+==== Multi-Account Containers (Firefox)
+**What they do**:
+- Isolate cookies/storage per container
+- Prevent cross-site tracking
+
+**Strength**: Clean identity separation.
+
+**What we do differently**:
+- Not just isolation, but *persona behavior*
+- Each container has distinct browsing pattern
+- Gradual metamorphosis across personas
+
+**Integration**: Use containers as persona shells (Firefox only)
+
+---
+
+== What Makes Algorithm Shield Unique
+
+=== 1. Focus on Algorithms, Not Just Tracking
+
+| Traditional Tools | Algorithm Shield |
+|-------------------|------------------|
+| Block trackers | Confuse recommender systems |
+| Prevent profiling | *Dilute* profile with noise |
+| Hide identity | Present *multiple* shifting identities |
+| Binary (on/off) | Continuous (membrane thickness) |
+| Reactive (block) | *Proactive* (manipulate feed) |
+
+**Key Insight**: Blocking is defensive. Manipulation is offensive.
+
+---
+
+=== 2. Temporal Dimension (Metamorphism)
+
+| Other Tools | Algorithm Shield |
+|-------------|------------------|
+| Static randomization | Scheduled identity drift |
+| One-time spoofing | Continuous evolution |
+| Instant change | Gradual metamorphosis |
+
+**Example**:
+```
+Week 1: 70% Tech, 20% Art, 10% Politics
+Week 4: 40% Tech, 40% Art, 20% Politics
+Week 8: 20% Tech, 60% Art, 20% Politics
+```
+
+Platform sees *natural interest evolution*, not sudden shift.
+
+---
+
+=== 3. Membrane Model (Selective Permeability)
+
+**No other tool** uses differentially permeable membrane:
+
+- Not "block all" or "allow all"
+- *Controlled passage* through filter bubbles
+- User chooses when/how to cross boundaries
+- Intentional exposure to opposing viewpoints
+
+**Biological inspiration**: Like cell membrane regulating what enters/exits.
+
+---
+
+=== 4. Counter-Algorithm (Using AI Against AI)
+
+**Traditional**: Passive defense
+
+**Algorithm Shield**: Active counter-algorithm
+
+- Minikaren rule engine *predicts* platform responses
+- Adapts strategy based on effectiveness
+- Future: ML-based rule generation (v5.0+)
+
+**Example**:
+```
+IF platform reduces diversity AFTER noise injection
+THEN increase noise injection rate
+ELSE maintain current rate
+```
+
+Algorithmic arms race, but user-controlled.
+
+---
+
+== Browser Flags & Experimental APIs
+
+=== Chrome Flags (chrome://flags)
+
+==== Privacy Sandbox APIs
+
+**Topics API** (replacing FLoC)
+
+**What it is**: Interest-based advertising without tracking
+
+**How we use it**:
+```javascript
+// Detect Topics API exposure
+document.browsingTopics().then(topics => {
+  console.log("Platform sees you as:", topics)
+  // Adjust persona if over-clustered
+  if (topics.length < 3) {
+    activateLens("Opposition")
+  }
+})
+```
+
+**Strategy**: Monitor what Topics API reveals, counter with diversification
+
+---
+
+**FLEDGE** (on-device ad auctions)
+
+**What it is**: Interest groups stored locally
+
+**How we use it**:
+```javascript
+// Join fake interest groups
+navigator.joinAdInterestGroup({
+  name: "gardening-enthusiasts",
+  owner: "https://example.com"
+})
+
+// Dilute real interests with noise
+```
+
+---
+
+**Attribution Reporting API**
+
+**What it is**: Track conversions without cross-site tracking
+
+**How we use it**:
+- Monitor attribution signals
+- Inject false conversions
+- Prevent accurate attribution of real actions
+
+---
+
+==== Federated Learning of Cohorts (FLoC) - Deprecated
+
+**Status**: Replaced by Topics API
+
+**Historical lesson**: Google pivoted due to privacy concerns
+
+**Our strategy**: Be ready for next iteration. Adaptive resistance.
+
+---
+
+==== Partitioned Cookies (CHIPS)
+
+**What it is**: Cookies partitioned by top-level site
+
+**How we use it**:
+```javascript
+// Set partitioned cookies per persona
+document.cookie = "persona=gardener; Partitioned; Secure"
+```
+
+Allows persona isolation even on same domain.
+
+---
+
+==== Storage Access API
+
+**What it is**: Request cross-site cookie access
+
+**How we use it**:
+- *Deny* access to prevent correlation
+- Or: Grant selectively based on membrane thickness
+
+---
+
+==== First-Party Sets
+
+**What it is**: Declare related domains as "same party"
+
+**Defense**:
+- Monitor which sets a site claims membership in
+- Warn user if unexpected correlation
+
+---
+
+=== Firefox Flags (about:config)
+
+==== Total Cookie Protection (TCP)
+
+**What it is**: Strict cookie partitioning
+
+**Integration**: Works naturally with our persona system
+
+---
+
+==== Enhanced Tracking Protection (ETP)
+
+**What it is**: Multi-level tracker blocking
+
+**Integration**: Complement with our feed manipulation
+
+---
+
+==== network.cookie.sameSite.laxByDefault
+
+**Strategy**: Ensure SameSite cookies don't leak across personas
+
+---
+
+=== Safari Flags
+
+==== Intelligent Tracking Prevention (ITP)
+
+**What it is**: ML-based tracker classification
+
+**Integration**: Monitor ITP decisions, complement with our rules
+
+---
+
+==== Private Click Measurement (PCM)
+
+**What it is**: Privacy-preserving ad attribution
+
+**Strategy**: Similar to Attribution Reporting API defense
+
+---
+
+== New Privacy Approaches
+
+=== 1. Differential Privacy
+
+**What it is**: Add mathematical noise to data
+
+**How we apply**:
+```rescript
+// Laplace noise for click timing
+let addDifferentialNoise = (trueDelay: float, epsilon: float): float => {
+  let sensitivity = 1000.0 // Max timing difference
+  let scale = sensitivity /. epsilon
+  let noise = Laplace.sample(scale)
+  trueDelay +. noise
+}
+```
+
+**Use case**: Federated bubble map (v5.0) uses differential privacy for aggregate stats
+
+---
+
+=== 2. Zero-Knowledge Proofs
+
+**What it is**: Prove statement without revealing data
+
+**Application** (v10.0):
+```
+Prove: "I've escaped filter bubble"
+Without: Revealing which bubble or how
+```
+
+Allows bubble map contribution without leaking identity.
+
+---
+
+=== 3. Homomorphic Encryption
+
+**What it is**: Compute on encrypted data
+
+**Application** (v5.0):
+```
+Compute: Aggregate bubble topology
+On: Encrypted user data
+Result: Public topology map
+Privacy: Individual data never decrypted
+```
+
+---
+
+== Cookie Reforms & Regulations
+
+=== GDPR / CCPA Compliance
+
+**Current**: Consent Armor auto-rejects tracking cookies
+
+**Enhancement** (v2.0):
+```rescript
+// Audit consent choices
+let auditConsent = (choices: consentData): analysis => {
+  // Detect dark patterns
+  if choices.legitimate_interest_count > choices.consent_count {
+    warnUser("Site using legitimate interest loophole")
+  }
+
+  // Auto-challenge dubious claims
+  if choices.includes("personalizedAds") && !choices.includes("analytics") {
+    suggestChallenge("Ads require analytics data")
+  }
+}
+```
+
+**Legal integration**: Generate GDPR data subject access requests
+
+---
+
+=== Third-Party Cookie Phase-Out
+
+**Timeline**: Chrome delays to 2025+, ongoing
+
+**Opportunity**: Post-cookie tracking will rely MORE on behavioral fingerprinting
+
+**Our advantage**: Already designed for algorithmic resistance
+
+**Strategy**: Position as "post-cookie privacy" tool
+
+---
+
+== Small Language Models (SLMs) Integration
+
+=== On-Device SLMs
+
+**Emerging**: Browsers may embed small models locally
+
+**Examples**:
+- Chrome's on-device ML
+- WebNN API
+- Safari's local LLM experiments
+
+**How Algorithm Shield uses SLMs**:
+
+==== 1. Content Classification (v1.0)
+
+Currently: Keyword-based heuristics
+```rescript
+if title->String.includes("programming") {
+  category = Tech
+}
+```
+
+**With SLM** (v2.0):
+```rescript
+// Use on-device model for semantic classification
+let classifyContent = async (title: string, description: string): category => {
+  let embedding = await SLM.embed(title ++ " " ++ description)
+  let category = await SLM.classify(embedding)
+  category
+}
+```
+
+**Advantage**: Semantic understanding, not just keywords
+
+---
+
+==== 2. Bubble Prediction (v5.0)
+
+**Model**: Predict how algorithm will respond to actions
+
+```rescript
+// Train local model on your interaction history
+let predictAlgorithmResponse = async (action: userAction): prediction => {
+  let context = {
+    recentClicks: last10Clicks,
+    currentBubble: bubbleState,
+    proposedAction: action
+  }
+
+  let prediction = await SLM.predict(context)
+  // "If you click this, algorithm likely recommends X"
+  prediction
+}
+```
+
+**Use case**: Warn user before actions that deepen bubble
+
+---
+
+==== 3. Adversarial Example Generation (v5.0)
+
+**Model**: Generate confusing signals for platform's model
+
+```rescript
+// Create adversarially confusing browsing pattern
+let generateAdversarialPattern = async (): pattern => {
+  // Use gradient-based approach to find
+  // browsing pattern that maximizes platform's uncertainty
+  let pattern = await SLM.generateAdversarial({
+    goal: "maximize_entropy",
+    constraints: "human_like_timing"
+  })
+  pattern
+}
+```
+
+**Result**: Platform's model can't confidently classify you
+
+---
+
+==== 4. Natural Language Rule Generation (v2.0)
+
+**Currently**: Rules in JSON
+
+**With SLM**:
+```
+User: "Don't show me political content after 8pm"
+SLM generates rule:
+{
+  conditions: [
+    {field: "content_type", operator: "Equals", value: "Politics"},
+    {field: "time_of_day", operator: "GreaterThan", value: 20}
+  ],
+  actions: [{type: "Hide"}]
+}
+```
+
+**Advantage**: Non-technical users can create rules
+
+---
+
+== Experimental Protocols & APIs
+
+=== WebTransport
+
+**What it is**: Modern replacement for WebSocket
+
+**Application**: Federated bubble map data sync (v5.0)
+
+```javascript
+// P2P bubble data exchange
+const transport = new WebTransport('https://bubble-map-relay.example')
+await transport.ready
+
+const stream = await transport.createBidirectionalStream()
+// Exchange anonymized bubble data
+```
+
+---
+
+=== WebGPU
+
+**What it is**: GPU access for high-performance compute
+
+**Application**: On-device ML for rule evaluation
+
+```javascript
+// Use GPU for fast rule engine evaluation
+const device = await navigator.gpu.requestAdapter()
+// Run Minikaren rules on GPU
+// Process 1000s of rules in parallel
+```
+
+---
+
+=== WebCodecs
+
+**What it is**: Access to platform media codecs
+
+**Application**: Video fingerprint diversity analysis
+
+```javascript
+// Analyze YouTube video recommendations
+const decoder = new VideoDecoder({
+  output: (frame) => analyzeVisualContent(frame),
+  error: (e) => console.error(e)
+})
+
+// Classify visual themes (tech vs art vs politics)
+// More accurate than text-only classification
+```
+
+---
+
+=== WebUSB / WebSerial
+
+**Application**: Hardware-based persona switching
+
+```javascript
+// Physical dial to adjust membrane thickness
+const port = await navigator.serial.requestPort()
+// Read analog input from USB device
+// Map to membrane thickness (0.0 - 1.0)
+```
+
+**UX**: Tangible interface for digital defense
+
+---
+
+=== File System Access API
+
+**Application**: Export/import personas as files
+
+```javascript
+// Export persona
+const handle = await window.showSaveFilePicker({
+  suggestedName: 'gardener-persona.json'
+})
+const writable = await handle.createWritable()
+await writable.write(JSON.stringify(persona))
+```
+
+**Advantage**: Personas are portable, shareable
+
+---
+
+=== Web Authentication (WebAuthn)
+
+**Application**: Cryptographically signed personas (v2.0)
+
+```javascript
+// Create signed persona with Januskey integration
+const credential = await navigator.credentials.create({
+  publicKey: {
+    challenge: personaHash,
+    rp: { name: "Algorithm Shield" },
+    user: { id: personaId, name: personaName }
+  }
+})
+
+// Persona is cryptographically verifiable
+// Can't be forged or impersonated
+```
+
+---
+
+=== Compute Pressure API
+
+**What it is**: Monitor device CPU/thermal state
+
+**Application**: Adjust timing based on device state
+
+```javascript
+// If device is under pressure, reduce membrane activity
+const observer = new ComputePressureObserver((records) => {
+  for (const record of records) {
+    if (record.state === 'critical') {
+      pauseMembraneActivity()
+    }
+  }
+})
+```
+
+**Advantage**: Battery-aware privacy
+
+---
+
+=== Idle Detection API
+
+**Application**: Pause persona when user idle
+
+```javascript
+const idleDetector = new IdleDetector()
+await idleDetector.start()
+
+idleDetector.addEventListener('change', () => {
+  if (idleDetector.userState === 'idle') {
+    // Pause automated actions
+    pauseShield()
+  }
+})
+```
+
+**Advantage**: Don't waste battery on fake clicks when user away
+
+---
+
+=== Speculation Rules API
+
+**Application**: Preload off-distribution content
+
+```javascript
+// Prefetch opposition lens content
+const specRules = {
+  prefetch: [
+    { source: "list", urls: oppositionUrls }
+  ]
+}
+
+const script = document.createElement('script')
+script.type = 'speculationrules'
+script.textContent = JSON.stringify(specRules)
+document.head.append(script)
+```
+
+**Advantage**: Instant membrane breach (content already loaded)
+
+---
+
+== Integration Roadmap
+
+=== v1.0 (Jun 2026)
+- [x] Basic privacy flags (Topics API, Storage Access)
+- [ ] AmIUnique fingerprint analysis
+- [ ] Privacy Sandbox monitoring
+
+=== v2.0 (Dec 2026)
+- [ ] On-device SLM for content classification
+- [ ] Natural language rule generation
+- [ ] WebAuthn persona signatures
+- [ ] File System Access for persona export
+
+=== v5.0 (Jun 2027)
+- [ ] WebTransport for P2P bubble map
+- [ ] Adversarial example generation (SLM)
+- [ ] WebGPU-accelerated rule engine
+- [ ] Differential privacy for federated data
+
+=== v10.0 (Jan 2028)
+- [ ] Full SLM integration (bubble prediction)
+- [ ] Zero-knowledge bubble map contribution
+- [ ] WebCodecs visual content analysis
+- [ ] Hardware-based membrane control (WebUSB)
+
+---
+
+== Competitive Positioning
+
+**Algorithm Shield is NOT**:
+- Another ad blocker (use uBlock Origin + Shield)
+- Another fingerprint spoofer (use Canvas Defender + Shield)
+- Another container extension (use Multi-Account Containers + Shield)
+
+**Algorithm Shield IS**:
+- *Algorithmic resistance* layer
+- Feed-level manipulation platform
+- Behavioral polymorphism engine
+- User-controlled counter-algorithm
+
+**Stacking Strategy**: Use Algorithm Shield *on top of* privacy tools
+
+```
+Layer 4: Algorithm Shield (feed manipulation, personas, lenses)
+Layer 3: AdNauseam (ad click poisoning)
+Layer 2: uBlock Origin (tracker blocking)
+Layer 1: HTTPS Everywhere (transport security)
+```
+
+**Each layer addresses different threat**:
+1. Network eavesdropping → HTTPS
+2. Tracker scripts → uBlock
+3. Ad profiling → AdNauseam
+4. Recommendation algorithms → **Algorithm Shield**
+
+---
+
+== Conclusion
+
+Algorithm Shield occupies a **unique niche**: algorithmic resistance.
+
+By leveraging:
+- Emerging privacy APIs (Topics, FLEDGE, Storage Access)
+- On-device SLMs (classification, prediction, adversarial generation)
+- Experimental protocols (WebTransport, WebGPU, WebCodecs)
+- Cookie reforms (post-3rd-party-cookie landscape)
+
+We create a tool that:
+- Complements existing privacy tools
+- Addresses next-generation tracking (behavioral fingerprinting)
+- Uses offensive tactics (manipulation, not just blocking)
+- Empowers users with agency (not just automated protection)
+
+**The future of privacy is not hiding. It's strategic confusion.**
+
+Algorithm Shield embodies this future.

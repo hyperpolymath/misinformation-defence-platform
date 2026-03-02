@@ -1,0 +1,394 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Network Protocol Integration for Algorithm Shield
+:toc:
+:toc-placement!:
+
+Using network protocol concepts for filter bubble navigation without disrupting infrastructure.
+
+toc::[]
+
+== The Question
+
+**Can we use BGP or similar protocols without upsetting everyone in charge of the internet?**
+
+**Short answer**: Not BGP directly, but we can use BGP-inspired concepts and leverage existing protocols in clever ways.
+
+== BGP-Inspired Metaphors (Safe to Use)
+
+=== 1. Path Diversity Metrics
+
+**BGP Concept**: Multiple AS paths to the same destination
+
+**Algorithm Shield Application**:
+```
+Current bubble: Tech → Politics → Tech (AS path length: 2)
+Lens routes:
+  - Opposition: Tech → Art → Education (distance: 3, novelty: HIGH)
+  - Random Walk: Tech → Health → Science (distance: 2, novelty: MEDIUM)
+  - Serendipity: Tech → ??? → ??? (distance: unknown, novelty: MAXIMUM)
+```
+
+**Implementation**:
+```rescript
+// "Bubble distance" analogous to AS-PATH length
+type bubbleDistance = {
+  hopCount: int,           // Like AS-PATH length
+  noveltyScore: float,     // How unfamiliar the path is
+  reversibility: float,    // Can you get back? (BGP loop prevention)
+}
+
+let calculateBubbleDistance = (
+  currentCluster: ContentSignal.category,
+  targetCluster: ContentSignal.category,
+  viaLens: Membrane.State.lensType
+): bubbleDistance => {
+  // Analyze "routing table" of content clusters
+  // Find shortest path through cluster graph
+  // Prefer paths with high novelty (avoid well-worn routes)
+}
+```
+
+=== 2. Preference Metrics (Local Preference, MED)
+
+**BGP Concept**: Local preference (prefer certain routes), Multi-Exit Discriminator (influence inbound traffic)
+
+**Algorithm Shield Application**:
+- **Local Preference**: User's configured lens priorities
+- **MED equivalent**: How "expensive" is it to cross a bubble boundary?
+
+```rescript
+type lensPreference = {
+  localPref: int,          // User's configured preference (0-100)
+  crossingCost: float,     // Cognitive effort to cross this boundary
+  stabilityMetric: float,  // Will this path stay open? (route flapping)
+}
+
+// Example: User strongly prefers Opposition lens
+let userPreferences = [
+  (Opposition, {localPref: 100, crossingCost: 0.3, stabilityMetric: 0.9}),
+  (RandomWalk, {localPref: 80, crossingCost: 0.5, stabilityMetric: 0.7}),
+  (Serendipity, {localPref: 60, crossingCost: 0.8, stabilityMetric: 0.4}),
+]
+```
+
+=== 3. Community Tags (BGP Communities)
+
+**BGP Concept**: Tag routes with community values for policy
+
+**Algorithm Shield Application**: Tag content with "bubble communities"
+
+```rescript
+// Like BGP communities (ASN:Value), we use Category:Subcategory
+type bubbleCommunity = string  // "Tech:AI-Ethics", "Politics:Climate"
+
+let communityTags = [
+  "Tech:AI-Ethics",
+  "Tech:Privacy",
+  "Science:Climate",
+  "Politics:Climate",  // Note: same subcategory, different main category
+]
+
+// Route filter: "Show me climate content NOT from my usual (Tech) bubble"
+let filterByCommunity = (
+  signals: array<ContentSignal.t>,
+  avoidCategories: array<ContentSignal.category>
+): array<ContentSignal.t> => {
+  signals->Array.filter(signal => {
+    // Check if signal's community overlaps but comes from different category
+    !(avoidCategories->Array.includes(signal.categories->Array.get(0)->Option.getOr(Tech)))
+  })
+}
+```
+
+== Protocols We CAN Use Directly
+
+=== 1. HTTP/2 & HTTP/3 (QUIC)
+
+**Already in the browser** - we can leverage these without any infrastructure changes.
+
+**Use Case**: Faster parallel URL fetching for membrane crossing
+
+```javascript
+// When opening 5 tabs via Random Walk lens:
+// HTTP/2 multiplexing = faster page loads
+// QUIC = resilient to packet loss
+// 0-RTT = faster reconnection if network flickers
+
+// We don't control this directly, but can optimize for it:
+const urlsToOpen = generateLensUrls(lens);
+// Browser will automatically use HTTP/3 if available
+urlsToOpen.forEach(url => chrome.tabs.create({url, active: false}));
+```
+
+**Benefit**: Faster membrane breaches, less user waiting time.
+
+=== 2. DNS-over-HTTPS (DoH) / DNS-over-TLS (DoT)
+
+**Use Case**: Privacy-preserving URL validation
+
+When validating generated URLs before opening (to avoid malicious injection), we can use DoH:
+
+```javascript
+// Check if a generated URL resolves (without leaking DNS queries)
+async function validateUrlWithDoH(url) {
+  const hostname = new URL(url).hostname;
+  const dohQuery = `https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`;
+  const response = await fetch(dohQuery, {
+    headers: {'Accept': 'application/dns-json'}
+  });
+  const data = await response.json();
+  return data.Status === 0;  // NOERROR = valid domain
+}
+```
+
+**Benefit**: Validate URLs without exposing what lens you're using to your ISP.
+
+=== 3. WebRTC (for P2P Bubble Maps - v5.0)
+
+**Use Case**: Decentralized, federated bubble topology sharing
+
+```javascript
+// Peer-to-peer sharing of bubble maps (no central server)
+const peerConnection = new RTCPeerConnection({
+  iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
+});
+
+// Share your local bubble topology with peers
+const localBubbleMap = observer.getBubbleTopology();
+const dataChannel = peerConnection.createDataChannel('bubble-map');
+dataChannel.send(JSON.stringify(localBubbleMap));
+
+// Receive aggregated topology from peers
+dataChannel.onmessage = (event) => {
+  const peerBubbleMap = JSON.parse(event.data);
+  aggregateBubbleMaps(localBubbleMap, peerBubbleMap);
+};
+```
+
+**Benefit**: Crowdsourced bubble maps without a central surveillance point. BGP-like "peering" between users.
+
+=== 4. IPv6 Flow Labels (Subtle, Non-Disruptive)
+
+**Use Case**: Tag outgoing requests with flow labels for QoS
+
+**CAUTION**: This requires cooperation from the browser and network stack. Not currently feasible in extensions.
+
+**Future possibility**: If browsers expose flow label APIs, we could tag "lens-generated" traffic differently from "organic" traffic for QoS analysis.
+
+```
+Flow Label 0x00000: User's organic browsing
+Flow Label 0x12345: Opposition lens traffic
+Flow Label 0x67890: Random Walk lens traffic
+```
+
+**Benefit**: Self-QoS - prioritize your "real" browsing, deprioritize lens exploration (or vice versa).
+
+== What About Actual BGP?
+
+=== Why We Can't Use It
+
+1. **Requires AS number**: You need to be an ISP or large org
+2. **BGP hijacking is illegal**: Announcing routes you don't own = federal crime
+3. **DDoS amplification risk**: Misconfigured BGP = internet chaos
+4. **No browser API**: Extensions can't speak BGP
+
+=== "BGP-Adjacent" Ideas (Non-Disruptive)
+
+**1. BGP Route Collectors (Read-Only)**
+
+Organizations like RIPE NCC, RouteViews, and CAIDA collect BGP routing tables.
+
+**Use Case**: Analyze internet topology for bubble metaphors
+
+```javascript
+// Fetch public BGP data (no disruption - just reading)
+async function getInternetTopology() {
+  const response = await fetch('https://stat.ripe.net/data/routing-status/data.json?resource=8.8.8.8');
+  const bgpData = await response.json();
+
+  // Use AS-path diversity as a metaphor
+  const asPathDiversity = bgpData.data.routes.length;
+  console.log(`Internet has ${asPathDiversity} paths to Google DNS`);
+  console.log(`Your bubble should have similar diversity!`);
+}
+```
+
+**Benefit**: Educational - show users that the internet has redundant paths, their content feed should too.
+
+**2. Traceroute / Paris Traceroute**
+
+**Use Case**: Visualize "path" from your bubble to a target topic
+
+```javascript
+// Can't run actual traceroute from browser, but can use public APIs
+async function visualizeBubblePath(targetTopic) {
+  // Metaphorical "traceroute" through content clusters
+  const path = [
+    {hop: 1, cluster: "Tech:Your Feed"},
+    {hop: 2, cluster: "Tech:General"},
+    {hop: 3, cluster: "Science:General"},
+    {hop: 4, cluster: targetTopic},
+  ];
+
+  console.log("Path to reach", targetTopic);
+  path.forEach(hop => console.log(`  ${hop.hop}: ${hop.cluster}`));
+}
+```
+
+**Benefit**: Makes "bubble distance" concrete and visualizable.
+
+== Federated Bubble Maps (v5.0) - The BGP Equivalent
+
+=== Concept: Peering Between Users
+
+Instead of autonomous systems exchanging routes, **users exchange bubble topologies**.
+
+```
+User A's bubble map:
+  Tech → Politics (strong connection, 80% of cross-cluster transitions)
+  Tech → Art (weak, 5%)
+
+User B's bubble map:
+  Politics → Science (strong, 70%)
+  Politics → Tech (weak, 10%)
+
+Aggregated map (like BGP best path selection):
+  Tech → Politics → Science (viable path discovered via "peering")
+```
+
+=== Implementation (WebRTC-based)
+
+```rescript
+module FederatedBubbleMap = {
+  type peerConnection = {
+    peerId: string,
+    dataChannel: Null.t<RTC.DataChannel.t>,
+    lastSync: float,
+  }
+
+  type bubbleRoute = {
+    sourceCluster: ContentSignal.category,
+    destCluster: ContentSignal.category,
+    viaPeers: array<string>,      // Like AS-PATH
+    transitionFrequency: float,   // Like BGP weight/local-pref
+    validatedBy: int,             // How many peers confirmed this route?
+  }
+
+  // Advertise your local bubble topology to peers (like BGP UPDATES)
+  let advertiseBubbleRoutes = (
+    localTopology: Observer.BubbleTopology.t,
+    peers: array<peerConnection>
+  ): unit => {
+    let routes = extractRoutes(localTopology)
+
+    peers->Array.forEach(peer => {
+      switch peer.dataChannel->Null.toOption {
+      | Some(channel) => {
+          let advertisement = {
+            type_: "bubble-route-update",
+            routes: routes,
+            timestamp: Date.now(),
+          }
+          channel.send(JSON.stringify(advertisement))
+        }
+      | None => ()
+      }
+    })
+  }
+
+  // Receive bubble routes from peers (like BGP UPDATEs received)
+  let receiveBubbleRoutes = (
+    message: string,
+    fromPeer: string,
+    localTopology: Observer.BubbleTopology.t
+  ): Observer.BubbleTopology.t => {
+    // Parse peer's topology
+    // Merge with local topology (like BGP best path selection)
+    // Prefer routes with higher validatedBy count
+    // Detect route conflicts (like BGP loop detection)
+    localTopology  // Updated with peer data
+  }
+}
+```
+
+=== Peering Policies (Like BGP Peering)
+
+```rescript
+type peeringPolicy =
+  | OpenPeering           // Accept routes from anyone (like public peering)
+  | TrustedOnly           // Only accept from verified peers (like private peering)
+  | SelectiveImport       // Filter specific routes (like BGP import policies)
+
+let peeringConfig = {
+  policy: TrustedOnly,
+  maxPeers: 50,
+  importFilter: [
+    // Only import routes for categories I'm interested in
+    Tech, Science, Education
+  ],
+  exportFilter: [
+    // Only share these clusters with peers (privacy!)
+    Tech, Science  // Don't share Politics bubble to peers
+  ]
+}
+```
+
+== Safety & Ethics
+
+=== What's Safe
+
+✅ **BGP metaphors** - Path diversity, preference metrics, communities
+✅ **Public BGP data** - Read-only analysis from RouteViews, RIPE
+✅ **HTTP/2, HTTP/3, DoH** - Already in the browser, no infrastructure changes
+✅ **WebRTC P2P** - Decentralized bubble maps, no BGP manipulation
+✅ **Traceroute metaphors** - Visualize bubble paths, educational
+
+=== What's NOT Safe
+
+❌ **BGP hijacking** - Announcing routes you don't own (illegal)
+❌ **BGP poisoning** - Injecting false routes (DDoS risk)
+❌ **AS squatting** - Claiming ASN you don't have (fraud)
+❌ **Route flapping** - Rapidly changing routes (internet instability)
+❌ **Blackholing** - Announcing /32 routes to drop traffic (abuse)
+
+== Recommendation
+
+**Use BGP as a mental model, not an implementation**:
+
+1. **Lens diversity** = Path diversity (multiple AS paths)
+2. **Bubble distance** = AS-PATH length
+3. **User preferences** = Local preference / MED
+4. **Federated maps** = BGP peering (via WebRTC, not actual BGP)
+
+**Leverage existing protocols**:
+- HTTP/2, HTTP/3 (QUIC) for performance
+- DoH/DoT for privacy
+- WebRTC for decentralized bubble sharing (v5.0)
+
+**Stay clear of**:
+- Actual BGP manipulation (illegal, dangerous)
+- Announcing routes (requires AS number, causes chaos)
+- Any network-layer protocol injection (browsers can't do this anyway)
+
+== Implementation Priority
+
+**v1.0 (Jun 2026)**: BGP metaphors in UI
+- "Bubble distance" metrics
+- "Path diversity" visualization
+- "Peering" = sharing lenses with friends
+
+**v2.0 (Dec 2026)**: HTTP/3, DoH
+- Optimize for HTTP/3 multiplexing
+- DoH-based URL validation
+
+**v5.0 (Jun 2027)**: Federated bubble maps
+- WebRTC-based peering
+- BGP-style route exchange (bubble topologies, not IP routes!)
+- Community-validated paths
+
+---
+
+**Bottom line**: We can absolutely use BGP *concepts* and *metaphors* without touching actual internet routing. The federated bubble map (v5.0) is essentially "BGP for content clusters" - and it's completely safe because it's application-layer, not network-layer.

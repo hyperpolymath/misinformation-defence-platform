@@ -1,0 +1,46 @@
+# Build output
+dist/
+lib/
+*.res.js
+*.bs.js
+
+# Rust
+target/
+Cargo.lock
+*.wasm
+
+# Dependencies
+node_modules/
+.pnp.*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+Thumbs.db
+
+# WASM build output
+pkg/
+
+# npm (only for ReScript tooling)
+package-lock.json
+node_modules/
+
+# Private correspondence (never sync)
+correspondence/
+
+# Crash recovery artifacts
+ai-cli-crash-capture/

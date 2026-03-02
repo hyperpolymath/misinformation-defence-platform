@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  nats:
+    image: docker.io/nats:latest
+    container_name: nats
+    command: -js -sd /data
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats_data:/data
+
+  dgraph-zero:
+    image: docker.io/dgraph/dgraph:latest
+    container_name: dgraph-zero
+    command: dgraph zero --my=dgraph-zero:5080
+    volumes:
+      - dgraph_data:/dgraph
+
+  dgraph-alpha:
+    image: docker.io/dgraph/dgraph:latest
+    container_name: dgraph-alpha
+    command: dgraph alpha --my=dgraph-alpha:7080 --zero=dgraph-zero:5080
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    volumes:
+      - dgraph_data:/dgraph
+
+  detector:
+    build: .
+    container_name: detector
+    ports:
+      - "9090:9090"
+    depends_on:
+      - nats
+      - dgraph-alpha
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=100m
+      - mode=1777
+
+volumes:
+  nats_data:
+  dgraph_data:

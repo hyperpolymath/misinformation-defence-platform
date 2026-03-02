@@ -1,0 +1,484 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Algorithm Shield - Defense Layers & OSI Mapping
+:toc:
+:toc-placement!:
+
+[.lead]
+How Algorithm Shield's protection mechanisms operate across the OSI stack and defend against algorithmic manipulation.
+
+toc::[]
+
+== Protection Categories
+
+=== a) Stealth (Hiding Intent)
+
+**Goal**: Make your true browsing intent invisible to the platform's recommendation algorithms.
+
+==== OSI Layer 7 (Application)
+* **Noise Injection**: Automated clicks on off-profile content
+** Platform sees: "User clicks diverse content"
+** Reality: Shield is generating false signals
+** Defense: Dilutes click-through rate (CTR) correlation
+
+* **Profile Dilution**: Background tab opens
+** Platform sees: Multiple topics visited simultaneously
+** Reality: User only engaged with one
+** Defense: Confuses session-based profiling
+
+* **Ghost Walk Mode**: Container isolation
+** Platform sees: Different user sessions
+** Reality: Same user, different personas
+** Defense: Prevents cross-session correlation
+
+==== OSI Layer 6 (Presentation)
+* **URL Parameter Stripping**: Removes tracking tokens
+** Platform sees: Direct navigation
+** Reality: Clicked from tracked link
+** Defense: Breaks referrer-based attribution
+
+==== OSI Layer 4 (Transport)
+* **Timing Randomization**: Variable delays between actions
+** Platform sees: Human-like interaction patterns
+** Reality: Automated by extension
+** Defense: Evades bot detection heuristics
+
+---
+
+=== b) Armouring (Blocking Attacks)
+
+**Goal**: Prevent the platform from capturing data about you in the first place.
+
+==== OSI Layer 7 (Application)
+* **Tracker Shield**: Blocks known tracking scripts
+** Blocks: Google Analytics, Facebook Pixel, etc.
+** Method: DOM content policy + script blocking
+** Defense: Prevents behavioral data exfiltration
+
+* **Consent Armor**: Auto-rejects non-essential cookies
+** Blocks: Advertising cookies, analytics cookies
+** Accepts: Only functional cookies
+** Defense: GDPR/CCPA compliance enforcement
+
+==== OSI Layer 6 (Presentation)
+* **Content Security Policy (CSP) Injection**
+** Blocks: Inline tracking scripts
+** Allows: Only extension-approved scripts
+** Defense: Prevents dynamic tracker injection
+
+==== OSI Layer 5 (Session)
+* **Storage Isolation**: Separate storage per persona
+** Blocks: Cross-persona cookie sharing
+** Method: Chrome container APIs
+** Defense: Prevents identity correlation
+
+==== OSI Layer 3 (Network) - Future
+* **DNS-level tracker blocking** (v2.0+)
+** Blocks: Tracker domains at DNS resolution
+** Method: Local DNS filtering
+** Defense: Prevents tracker connection entirely
+
+---
+
+=== c) Polymorphism (Changing Shape)
+
+**Goal**: Present different behavioral patterns to the algorithm at different times.
+
+==== OSI Layer 7 (Application)
+* **Personas**: Switchable behavioral profiles
+** Gardener persona: Slow scroll, nature content
+** Tech Skeptic persona: Political news, privacy tools
+** Art Student persona: Visual content, long dwell time
+** Defense: Algorithm can't build stable long-term profile
+
+* **Lens Rotation**: Switching feed transformation strategies
+** Opposition Lens today → Random Walk tomorrow
+** Platform sees: Inconsistent engagement patterns
+** Defense: Prevents algorithm from predicting preferences
+
+==== OSI Layer 6 (Presentation)
+* **User-Agent Rotation** (v2.0+)
+** Presents: Different browser/OS combinations
+** Platform sees: Multiple devices
+** Defense: Breaks device fingerprinting
+
+==== OSI Layer 5 (Session)
+* **Session Fragmentation**: Short sessions with varied intervals
+** Pattern: 5min session, 2hr break, 15min session, 30min break
+** Platform sees: Irregular engagement
+** Defense: Prevents session-based behavioral modeling
+
+---
+
+=== d) Metamorphism (Evolving Identity)
+
+**Goal**: Gradually shift your algorithmic identity over time to prevent lock-in.
+
+==== OSI Layer 7 (Application)
+* **Persona Scheduler**: Automated persona rotation
+** Week 1: 70% Gardener, 20% Art Student, 10% Tech Skeptic
+** Week 2: 50% Gardener, 30% Art Student, 20% Tech Skeptic
+** Week 3: 40% Gardener, 40% Art Student, 20% Tech Skeptic
+** Defense: Gradual identity drift prevents hard classification
+
+* **Feed Trajectory Manipulation**: Intentional bubble migration
+** Current: Tech/AI cluster
+** Target: Ecology/Local Politics cluster
+** Method: Gradual engagement shift over weeks
+** Defense: Escape filter bubble without triggering anomaly detection
+
+==== OSI Layer 6 (Presentation)
+* **Progressive Preference Masking**: Slowly hide true preferences
+** Month 1: Show 80% real preferences, 20% noise
+** Month 2: Show 60% real preferences, 40% noise
+** Month 3: Show 40% real preferences, 60% noise
+** Defense: Algorithm can't distinguish signal from noise
+
+==== Timeline Dimension (Beyond OSI)
+* **Seasonal Metamorphosis**: Calendar-based identity shifts
+** Summer: Outdoor/travel content emphasis
+** Winter: Indoor/creative content emphasis
+** Platform sees: Natural interest evolution
+** Defense: Mimics organic human behavior change
+
+---
+
+=== e) Other Categories
+
+==== Membrane Permeability (Unique to Algorithm Shield)
+
+**Goal**: Controlled passage through filter bubble boundaries.
+
+**OSI Layer 7 (Application)**:
+* **Membrane Breach**: On-demand exposure to off-distribution content
+** User triggers: Manual breach button
+** Shield executes: Opens 3-5 contrasting items
+** Platform sees: Spontaneous interest shift
+** Defense: User-controlled bubble escape
+
+* **Lens-Based Filtering**: Transform feed without server knowledge
+** Client-side: Reorder DOM elements
+** Server sees: Standard feed delivered
+** User sees: Opposition-filtered feed
+** Defense: Platform can't detect transformation
+
+**Conceptual Layer (Information Architecture)**:
+* **Bubble Map Visualization**: Show what the algorithm thinks you are
+** Reads: Engagement patterns, recommended content
+** Analyzes: Cluster concentration
+** Displays: "You're in Tech/AI cluster; adjacent: Craft, Ecology"
+** Defense: Awareness enables informed resistance
+
+==== Counter-Algorithm (Algorithmic Self-Defense)
+
+**Goal**: Use algorithmic methods to resist algorithmic manipulation.
+
+**OSI Layer 7 (Application)**:
+* **Minikaren Rule Engine**: Logic programming for behavioral rules
+** Evaluates: "IF platform=X AND scroll_depth>N THEN inject_noise"
+** Executes: Probabilistic action selection
+** Defense: Systematic anti-pattern generation
+
+* **Behavioral Tuning**: Machine learning on algorithm responses
+** Observes: How algorithm responds to persona shifts
+** Learns: Optimal noise injection rates
+** Adapts: Rule probabilities based on effectiveness
+** Defense: Adaptive resistance (v5.0+)
+
+**Meta-Level (Beyond OSI)**:
+* **Federated Bubble Topology**: Crowdsourced algorithm mapping
+** Aggregates: Anonymized bubble data from all users
+** Reveals: Filter bubble structure across population
+** Enables: Collective escape routes
+** Defense: Transparency breeds resistance (v5.0+)
+
+---
+
+== OSI Stack Summary
+
+[cols="1,2,3,2"]
+|===
+|Layer |Name |Algorithm Shield Defenses |Primary Category
+
+|**7** |Application
+a|
+* Noise injection
+* Profile dilution
+* Personas
+* Lens transformations
+* Tracker blocking
+* Rule engine
+|Stealth, Polymorphism, Counter-Algorithm
+
+|**6** |Presentation
+a|
+* URL parameter stripping
+* CSP injection
+* User-agent rotation
+* Preference masking
+|Stealth, Armouring
+
+|**5** |Session
+a|
+* Storage isolation
+* Session fragmentation
+* Container separation
+|Armouring, Polymorphism
+
+|**4** |Transport
+a|
+* Timing randomization
+* Human-like delays
+* Scroll inertia simulation
+|Stealth
+
+|**3** |Network
+a|
+* DNS tracker blocking (v2.0+)
+|Armouring
+
+|**2** |Data Link
+|_(Not applicable)_
+|
+
+|**1** |Physical
+|_(Not applicable)_
+|
+|===
+
+---
+
+== Algorithmic Dangers & Defenses
+
+=== Danger 1: Filter Bubble Lock-In
+
+**Attack Vector**: Algorithm narrows content to maximize engagement, trapping user in ideological/interest echo chamber.
+
+**Defense Layers**:
+* **Layer 7**: Opposition Lens surfaces contrasting content
+* **Layer 7**: Membrane Breach enables controlled escape
+* **Meta**: Bubble Map shows current cluster, adjacent possibilities
+* **Category**: Membrane Permeability + Metamorphism
+
+**How It Works**:
+1. Observer analyzes feed, detects homogeneity
+2. User activates Opposition Lens
+3. Client-side reordering prioritizes underrepresented categories
+4. User clicks breach → opens 3-5 off-cluster items
+5. Algorithm receives engagement signal for diverse content
+6. Over time, recommendations diversify (if sustained)
+
+**OSI Insight**: Happens entirely at Layer 7 (Application). Platform sees standard HTTP requests; can't detect client-side manipulation.
+
+---
+
+=== Danger 2: Behavioral Profiling
+
+**Attack Vector**: Platform builds detailed psychological profile from engagement data (clicks, dwell time, scroll depth, session duration).
+
+**Defense Layers**:
+* **Layer 7**: Noise injection creates false positives
+* **Layer 7**: Persona switching fragments behavioral data
+* **Layer 5**: Storage isolation prevents cross-session correlation
+* **Layer 4**: Timing randomization evades pattern detection
+* **Category**: Stealth + Polymorphism
+
+**How It Works**:
+1. User activates Gardener persona
+2. Shield adjusts click probability (0.3 instead of 0.7)
+3. Shield injects random delays (200-800ms instead of fixed)
+4. Shield opens background tabs on unrelated topics
+5. Platform sees: Low confidence user profile
+6. Result: Recommendations become generic, not personalized
+
+**OSI Insight**: Multi-layer defense. Layer 7 creates false data, Layer 5 isolates identity, Layer 4 masks automation.
+
+---
+
+=== Danger 3: Engagement Maximization (Addiction)
+
+**Attack Vector**: Algorithm serves infinite scroll, high-stimulation content to maximize session duration and ad exposure.
+
+**Defense Layers**:
+* **Layer 7**: Engagement Disruption rule suggests breaks
+* **Layer 7**: Scroll limit enforcement
+* **Layer 6**: Serendipity Lens injects low-stimulation content
+* **Category**: Counter-Algorithm
+
+**How It Works**:
+1. User scrolls >50 items
+2. Rule engine detects: `scroll_depth > threshold`
+3. Shield displays: "You've scrolled 50 items. Take a break?"
+4. If user continues: Shield injects calm/slow content
+5. Serendipity Lens surfaces archival, non-trending material
+6. Result: Reduced dopamine-seeking, mindful browsing
+
+**OSI Insight**: Layer 7 rule engine monitors state, intervenes when threshold crossed. Client-side only; platform unaware.
+
+---
+
+=== Danger 4: Surveillance Capitalism
+
+**Attack Vector**: Trackers follow user across web, build cross-site profile, sell to advertisers.
+
+**Defense Layers**:
+* **Layer 7**: Tracker Shield blocks scripts
+* **Layer 6**: URL parameter stripping
+* **Layer 5**: Storage isolation (cookies)
+* **Layer 3**: DNS blocking (v2.0+)
+* **Category**: Armouring
+
+**How It Works**:
+1. User visits site with Facebook Pixel
+2. Shield detects: Known tracker domain
+3. Shield blocks: Script load at Layer 7
+4. Shield strips: `fbclid=` parameter at Layer 6
+5. Shield isolates: Cookies per persona at Layer 5
+6. Shield blocks: `facebook.com/tr/` at DNS Layer 3 (future)
+7. Result: Tracker receives no data
+
+**OSI Insight**: Defense-in-depth across 4 layers. Even if Layer 7 fails, Layers 6/5/3 provide fallback.
+
+---
+
+=== Danger 5: Algorithmic Radicalization
+
+**Attack Vector**: Recommendation algorithm amplifies extreme content to maximize engagement (outrage, conspiracy theories).
+
+**Defense Layers**:
+* **Layer 7**: Time-Shift Lens deprioritizes trending content
+* **Layer 7**: Locality Lens surfaces local/community content
+* **Meta**: Bubble Map alerts user to extreme clustering
+* **Category**: Membrane Permeability + Metamorphism
+
+**How It Works**:
+1. User watches political video
+2. Algorithm recommends increasingly extreme content
+3. Observer detects: Clustering toward extreme category
+4. Bubble Map alerts: "You're drifting toward [cluster]"
+5. User activates Time-Shift Lens
+6. Lens deprioritizes recent/trending (where extremism lives)
+7. User sees: Archival, moderate content
+8. Metamorphosis scheduler: Gradual drift toward balanced clusters
+9. Result: Escape radicalization pipeline
+
+**OSI Insight**: Combines Layer 7 client-side filtering with meta-level awareness tools. User stays informed, in control.
+
+---
+
+== Defense Effectiveness Matrix
+
+[cols="2,1,1,1,1"]
+|===
+|Algorithmic Danger |Stealth |Armouring |Polymorphism |Metamorphism
+
+|**Filter Bubble**
+|⭐⭐
+|⭐
+|⭐⭐⭐
+|⭐⭐⭐⭐⭐
+
+|**Behavioral Profiling**
+|⭐⭐⭐⭐⭐
+|⭐⭐⭐
+|⭐⭐⭐⭐
+|⭐⭐⭐
+
+|**Engagement Addiction**
+|⭐
+|⭐⭐
+|⭐⭐
+|⭐⭐⭐
+
+|**Surveillance**
+|⭐⭐
+|⭐⭐⭐⭐⭐
+|⭐⭐
+|⭐
+
+|**Radicalization**
+|⭐⭐
+|⭐
+|⭐⭐⭐
+|⭐⭐⭐⭐⭐
+|===
+
+**Legend**: ⭐ = Low effectiveness, ⭐⭐⭐⭐⭐ = High effectiveness
+
+---
+
+== Why OSI Layers Matter
+
+=== Layer 7 (Application) is Primary Battlefield
+
+**Advantages**:
+* Full control: Extension has DOM access
+* Invisible to platform: Client-side mutations undetectable
+* Rich context: Can analyze content semantics
+
+**Limitations**:
+* Platform can change DOM anytime (fragile)
+* Can't block network requests after sent
+* CPU-intensive (reordering large feeds)
+
+**Strategy**: Do as much as possible at Layer 7, use lower layers for what Layer 7 can't handle.
+
+---
+
+=== Multi-Layer Defense is Redundant
+
+If Layer 7 tracker blocking fails (script loads before extension ready):
+→ Layer 6 strips tracking parameters from URLs
+→ Layer 5 isolates cookies so tracker can't correlate
+→ Layer 3 blocks tracker domain at DNS (future)
+
+**Result**: Even partial failure doesn't leak data.
+
+---
+
+=== Meta-Layer (Beyond OSI) Enables Collective Action
+
+OSI model is individual-focused. Algorithm Shield adds:
+* **Awareness**: Bubble map, cluster visualization
+* **Coordination**: Federated topology sharing (v5.0+)
+* **Governance**: User-controlled rules, not black box
+
+**This is the unique contribution**: Not just technical defense, but _informed, collective resistance_.
+
+---
+
+== Future Directions (v2.0+)
+
+=== Layer 3 (Network) Expansion
+* Local DNS filtering
+* VPN integration for persona routing
+* Tor for ghost walk mode
+
+=== Layer 2 (Data Link) - Experimental
+* MAC address randomization per persona
+* Bluetooth/WiFi fingerprint prevention
+
+=== Layer 8 (Social/Political) - v10.0
+* Platform cooperation API (voluntary)
+* W3C standard for user-controlled recommendations
+* Legal framework: "Right to algorithmic self-determination"
+
+---
+
+== Conclusion
+
+Algorithm Shield operates primarily at **OSI Layer 7 (Application)** with strategic use of Layers 4-6 for redundancy and evasion.
+
+**Key Insight**: The power of Algorithm Shield isn't just in blocking or hiding, but in **controlled permeability** — letting the user choose when to cross filter bubble membranes, what identity to present, and how to evolve over time.
+
+This is **algorithmic self-defense**, not just privacy protection.
+
+**The membrane metaphor is literal**: Like a biological membrane, Algorithm Shield is:
+* **Selectively permeable**: Some things pass, some don't
+* **Context-responsive**: Changes permeability based on environment
+* **Self-regulating**: Maintains internal state (persona) separate from external (platform)
+* **Evolvable**: Can metamorphose over time
+
+**Bottom line**: We're not trying to beat the algorithm at its own game (that's an arms race we'd lose). We're creating a new game where the user has agency, awareness, and the ability to shape their own information diet.

@@ -1,0 +1,611 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Perspective Sharing: Walk a Mile in Someone Else's Algorithmic Shoes
+:toc:
+:toc-placement!:
+
+A lightweight system for importing/exporting algorithmic experiences to build empathy and understanding.
+
+toc::[]
+
+== The Vision
+
+**"What does YouTube look like for a Black woman? A rural conservative? A teenager in Mumbai?"**
+
+Instead of *hypothetical* personas, users can share their **actual algorithmic experience** and others can temporarily "try it on."
+
+**Goal**: Build empathy by experiencing the internet from others' perspectives
+
+== Core Concept: Algorithmic Experience Profiles
+
+An "Algorithmic Experience Profile" (AEP) is a lightweight data structure that captures:
+
+1. **What the algorithm shows you** (feed composition)
+2. **How the algorithm treats you** (recommendations, search results)
+3. **What you never see** (filter bubble boundaries)
+
+**NOT captured** (privacy):
+- Actual browsing history
+- Personal information
+- Login credentials
+- Anything identifiable
+
+**Captured** (anonymized):
+- Feed category distribution (e.g., "70% Gaming, 20% Memes, 10% Commentary")
+- Recommendation patterns (e.g., "Algorithm suggests more extreme content over time")
+- Bubble boundaries (e.g., "Never see: Politics, News, Education")
+- Diversity metrics (e.g., "Simpson's Diversity Index: 0.32")
+
+== Profile Format (Lightweight JSON)
+
+```json
+{
+  "profile_version": "1.0",
+  "profile_id": "a3f2b1c4-...",
+  "created_at": "2026-01-24T12:00:00Z",
+  "platform": "youtube",
+
+  "metadata": {
+    "description": "Black woman, 35, tech professional in San Francisco",
+    "shared_by": "anonymous",
+    "anonymity_level": "high",
+    "ethical_consent": true
+  },
+
+  "feed_composition": {
+    "Tech": 0.45,
+    "Entertainment": 0.25,
+    "Social": 0.15,
+    "News": 0.10,
+    "Education": 0.05
+  },
+
+  "bubble_boundaries": {
+    "inside_bubble": ["Tech", "Entertainment", "Social"],
+    "rarely_shown": ["Politics", "Commerce"],
+    "never_shown": ["Health", "Science"],
+    "diversity_score": 0.42
+  },
+
+  "recommendation_patterns": {
+    "trending_content_rate": 0.35,
+    "personalized_rate": 0.50,
+    "discovery_rate": 0.15,
+    "polarization_gradient": 0.28
+  },
+
+  "search_biases": [
+    {
+      "query": "hair care",
+      "top_results_category": "Black hair care",
+      "assumption_detected": "racial profiling"
+    },
+    {
+      "query": "professional attire",
+      "top_results_category": "women's business fashion",
+      "assumption_detected": "gender profiling"
+    }
+  ],
+
+  "accessibility": {
+    "auto_captions_quality": "medium",
+    "recommended_content_with_captions": 0.60,
+    "visual_accessibility": "not_prioritized"
+  },
+
+  "tags": ["tech-professional", "woman", "black", "urban", "millennial"]
+}
+```
+
+**File size**: ~5-10KB per profile (very lightweight!)
+
+== Profile Sources
+
+**1. User-Contributed (Primary)**
+
+Users voluntarily share their algorithmic experience:
+
+```
+╔══════════════════════════════════════════════════════╗
+║  🤝 Share Your Algorithmic Experience                ║
+╠══════════════════════════════════════════════════════╣
+║                                                       ║
+║  Help others understand algorithmic bias by          ║
+║  sharing your feed profile (anonymously).            ║
+║                                                       ║
+║  What's shared:                                      ║
+║  ✅ Feed category distribution (70% Tech, 20% Art)   ║
+║  ✅ Recommendation patterns (trending vs discovery)  ║
+║  ✅ Bubble boundaries (what you never see)           ║
+║                                                       ║
+║  What's NOT shared:                                  ║
+║  ❌ Browsing history                                  ║
+║  ❌ Personal information                              ║
+║  ❌ Login credentials                                 ║
+║  ❌ Anything identifiable                             ║
+║                                                       ║
+║  Anonymity Level: [ High ▼ ]                         ║
+║    • High: No demographics (safest)                  ║
+║    • Medium: Age/region only                         ║
+║    • Low: Demographics (requires explicit consent)   ║
+║                                                       ║
+║  Optional Description:                               ║
+║  ┌───────────────────────────────────────────────┐  ║
+║  │ "Woman in tech, lives in SF, follows AI news"│  ║
+║  └───────────────────────────────────────────────┘  ║
+║                                                       ║
+║  [ Generate Profile ]  [ Cancel ]                    ║
+║                                                       ║
+╚══════════════════════════════════════════════════════╝
+```
+
+Generates a `.aep` file (Algorithmic Experience Profile)
+
+**2. Community Repository (Optional)**
+
+A web service (e.g., `perspectives.algorithm-shield.org`) where users can:
+- Upload profiles (optional, anonymous)
+- Browse profiles by tags
+- Download profiles to try
+
+**Not centralized surveillance** - just a file-sharing service like GitHub Gists
+
+**3. Direct Sharing (P2P)**
+
+Users can share profiles directly:
+- Export → Email/Discord/Signal
+- Import from URL or file upload
+- No central server required
+
+== Importing a Profile ("Try It On")
+
+**UI Flow**:
+
+```
+╔══════════════════════════════════════════════════════╗
+║  👤 Try Someone Else's Perspective                    ║
+╠══════════════════════════════════════════════════════╣
+║                                                       ║
+║  [ Import from File ]  [ Import from URL ]           ║
+║                                                       ║
+║  Or select from community profiles:                  ║
+║                                                       ║
+║  📁 Downloaded Profiles (3)                          ║
+║    ├─ Tech professional, woman, urban               ║
+║    ├─ Rural conservative, parent                     ║
+║    └─ Teenager, gaming enthusiast                    ║
+║                                                       ║
+║  🌐 Featured Profiles                                ║
+║    ├─ "Black woman in tech" (tech-professional)      ║
+║    ├─ "LGBTQ+ activist" (social-justice)             ║
+║    ├─ "Disabled creator" (accessibility-focused)     ║
+║    ├─ "Non-binary artist" (creative, queer)          ║
+║    ├─ "Immigrant parent" (family, multilingual)      ║
+║    └─ "Conservative Christian" (faith, traditional)  ║
+║                                                       ║
+║  [Selected: "Black woman in tech"]                   ║
+║                                                       ║
+║  This profile shows:                                 ║
+║    • Feed: 45% Tech, 25% Entertainment, 15% Social   ║
+║    • Never shown: Science, Health                    ║
+║    • Search bias detected: hair care, fashion        ║
+║                                                       ║
+║  Safe Mode: ✅ View only (don't contaminate profile) ║
+║                                                       ║
+║  [ Try This Perspective ]  [ Learn More ]            ║
+║                                                       ║
+╚══════════════════════════════════════════════════════╝
+```
+
+When user clicks "Try This Perspective":
+
+**Safe Mode (Default)**:
+1. Opens 4-5 tabs that represent this perspective's feed
+2. **Does NOT engage** (no clicks, no watch time, no likes)
+3. User can visually see the difference
+4. Close tabs immediately - no profile contamination
+
+**Immersive Mode (Advanced)**:
+1. Temporarily modifies your feed to match this profile
+2. Runs for 15 minutes (time-boxed)
+3. Records what algorithm shows you
+4. Reverts to your profile afterwards
+5. Generates comparison report
+
+## Empathy-Building Use Cases
+
+**1. Gender Bias**
+
+```
+Your perspective (Male):
+  Search "CEO" → Results: 80% male CEOs, suits, offices
+  Recommendations: Business, entrepreneurship, finance
+
+"Woman in tech" perspective:
+  Search "CEO" → Results: 60% male CEOs, 40% "women in leadership"
+  Recommendations: "Work-life balance", "Imposter syndrome", "Women in tech"
+
+🎓 Insight: Algorithm assumes women need different content,
+even for same search query. It's profiling, not personalizing.
+```
+
+**2. Racial Bias**
+
+```
+Your perspective (White):
+  Search "professional hair" → Results: Generic office styles
+  Recommendations: Grooming tips, barbershops
+
+"Black woman" perspective:
+  Search "professional hair" → Results: "Natural hair in workplace"
+  Recommended: "Natural hair discrimination", "Protective styles"
+
+🎓 Insight: Algorithm assumes different "professional" standards
+by race. It's reinforcing stereotypes.
+```
+
+**3. Age Bias**
+
+```
+Your perspective (35 years old):
+  Feed: News, tutorials, long-form content
+  Recommendations: Depth, analysis, educational
+
+"Teenager" perspective:
+  Feed: Memes, gaming, trends, shorts
+  Recommendations: Viral content, quick hits, challenges
+
+🎓 Insight: Algorithm creates age-segregated realities.
+Teens and adults see completely different internets.
+```
+
+**4. Political Bias**
+
+```
+Your perspective (Centrist):
+  Feed: Mix of perspectives, diverse sources
+  Recommendations: News from various outlets
+
+"Rural conservative" perspective:
+  Feed: 70% conservative sources, 30% centrist
+  Recommendations: More extreme versions of same viewpoint
+
+🎓 Insight: Algorithm amplifies existing leanings,
+creates polarization through recommendation gradient.
+```
+
+**5. Accessibility**
+
+```
+Your perspective (Able-bodied):
+  Feed: Videos with/without captions, mixed quality
+  Accessibility: Not a priority in recommendations
+
+"Deaf user" perspective:
+  Feed: Higher rate of captioned content (algorithm learns)
+  BUT: Caption quality poor, many videos still inaccessible
+
+🎓 Insight: Algorithm adapts to disability, but platforms
+don't enforce caption quality. Adaptation ≠ accommodation.
+```
+
+== Privacy & Ethics
+
+**Strict Privacy Rules**:
+
+1. **No PII**: Profiles must strip all personally identifiable information
+2. **Opt-in only**: Users must explicitly consent to sharing
+3. **Anonymity levels**: Users choose how much to reveal
+4. **Right to delete**: Profiles can be revoked from repository
+5. **No tracking**: Repository doesn't track who downloads what
+
+**Ethical Consent**:
+
+```json
+{
+  "ethical_consent": {
+    "consents_to_sharing": true,
+    "understands_public": true,
+    "age_verified": true,
+    "can_revoke": true,
+    "anonymity_level": "high",
+    "signature": "a3f2b1c4...",
+    "timestamp": "2026-01-24T12:00:00Z"
+  }
+}
+```
+
+**Anonymization Process**:
+
+```rescript
+module ProfileAnonymizer = {
+  let anonymizeProfile = (rawFeedState: Observer.FeedState.t): algorithmicProfile => {
+    // STRIP personal data
+    let anonymized = {
+      feedComposition: calculateCategoryDistribution(rawFeedState),
+      bubbleBoundaries: identifyBubbleBoundaries(rawFeedState),
+      diversityScore: calculateDiversityMetrics(rawFeedState),
+      // NO watch history, NO search queries, NO identifiers
+    }
+
+    // ADD noise for differential privacy (if requested)
+    if anonymityLevel == High {
+      addLaplaceNoise(anonymized, epsilon: 0.1)
+    } else {
+      anonymized
+    }
+  }
+}
+```
+
+== Technical Implementation
+
+**File Format**: JSON (human-readable, lightweight)
+**File Extension**: `.aep` (Algorithmic Experience Profile)
+**File Size**: 5-10KB (tiny!)
+
+**Import/Export API**:
+
+```rescript
+module ProfileSharing = {
+  // Export current experience as profile
+  let exportProfile = (
+    feedState: Observer.FeedState.t,
+    metadata: {
+      description: string,
+      anonymityLevel: anonymityLevel,
+    }
+  ): string => {
+    let profile = {
+      version: "1.0",
+      id: generateUUID(),
+      created: Date.now(),
+      platform: "youtube",
+      metadata: metadata,
+      feedComposition: extractFeedComposition(feedState),
+      bubbleBoundaries: extractBubbleBoundaries(feedState),
+      // ...
+    }
+
+    JSON.stringify(profile, null, 2)  // Pretty-printed JSON
+  }
+
+  // Import profile from JSON
+  let importProfile = (jsonString: string): result<algorithmicProfile, string> => {
+    try {
+      let parsed = JSON.parse(jsonString)
+
+      // Validate schema
+      if !validateProfileSchema(parsed) {
+        Error("Invalid profile format")
+      } else {
+        Ok(parseProfile(parsed))
+      }
+    } catch {
+    | _ => Error("Failed to parse profile")
+    }
+  }
+
+  // Apply profile (Safe Mode: view only)
+  let applyProfileSafeMode = (
+    profile: algorithmicProfile
+  ): array<string> => {
+    // Generate URLs that would match this profile's feed
+    let sampleUrls = generateRepresentativeUrls(profile.feedComposition)
+
+    // Open tabs (view only, no engagement)
+    sampleUrls->Array.map(url => {
+      ChromeTabs.Tabs.createWithUrl(url, ~active=false)
+    })
+
+    sampleUrls  // Return for logging
+  }
+}
+```
+
+**Storage**:
+
+```javascript
+// Save downloaded profiles locally
+chrome.storage.local.set({
+  'downloaded_profiles': [
+    {id: "a3f2...", name: "Tech woman", tags: ["tech", "woman"]},
+    {id: "b4g3...", name: "Rural conservative", tags: ["conservative", "rural"]},
+    // ...
+  ]
+});
+```
+
+== UI Integration (Lightweight)
+
+**New button in popup**:
+
+```
+╔══════════════════════════════════════════════╗
+║  🛡️ Algorithm Shield                         ║
+╠══════════════════════════════════════════════╣
+║  Current Platform: YouTube                   ║
+║  Bubble Score: 0.72 (High)                   ║
+║                                               ║
+║  [ Membrane Breach ]  [ 👤 Try Perspective ] ║  ← NEW!
+║                                               ║
+╚══════════════════════════════════════════════╝
+```
+
+Clicking "Try Perspective" opens perspective selector (as shown above)
+
+**No heavy infrastructure** - just:
+- File import/export
+- Optional community repository (static file hosting)
+- Client-side profile parsing
+
+== Community Repository (Optional)
+
+**Simple static site** (`perspectives.algorithm-shield.org`):
+
+```
+Algorithmic Perspectives Repository
+────────────────────────────────────
+
+Share and discover how others experience the web.
+
+┌─────────────────────────────────────────────┐
+│ 🔍 Search profiles...                       │
+└─────────────────────────────────────────────┘
+
+📁 Browse by Tag:
+  • Women (47 profiles)
+  • Black (23 profiles)
+  • LGBTQ+ (31 profiles)
+  • Disabled (12 profiles)
+  • Conservative (18 profiles)
+  • Liberal (22 profiles)
+  • Non-binary (9 profiles)
+  • Immigrant (15 profiles)
+  • Teenager (34 profiles)
+
+📊 Featured Collections:
+  • "Understanding Gender Bias" (8 profiles)
+  • "Political Polarization Study" (12 profiles)
+  • "Accessibility Experiences" (6 profiles)
+
+───────────────────────────────────────────────
+
+How it works:
+1. Users export their profile (anonymous)
+2. Upload to repository (optional)
+3. Others download and "try on"
+4. Build empathy through experience
+
+Privacy: All profiles are anonymized. No PII.
+```
+
+**Backend**: Just static JSON files on GitHub Pages or similar
+**No server logic** - just file hosting
+**No tracking** - no analytics, no user accounts
+
+== Educational Applications
+
+**1. Classroom Use**:
+```
+Teacher: "Today we're studying algorithmic bias."
+Students: Download 5 different perspectives
+Students: Compare what each perspective sees
+Discussion: How do algorithms create different realities?
+```
+
+**2. Journalism**:
+```
+Article: "How YouTube Radicalizes Teens"
+Evidence: Import "teenager" profile, show recommendation gradient
+Reader: Can verify claims by trying profile themselves
+```
+
+**3. Product Teams**:
+```
+Engineer: "Is our algorithm biased?"
+Test: Import 10 diverse profiles
+Measure: How different are the experiences?
+Fix: Adjust algorithm to reduce disparities
+```
+
+**4. Research**:
+```
+Academic: Studying filter bubbles
+Data: Crowdsourced profiles from 1000+ users
+Analysis: Quantify bubble strength across demographics
+Publication: Include .aep files as supplementary data
+```
+
+== Implementation Roadmap
+
+**v1.0 (Jun 2026)**: NOT included
+- Focus on core lens functionality first
+
+**v1.5 (Sep 2026)**: Basic profile sharing
+- ✅ Export profile to JSON file
+- ✅ Import profile from file
+- ✅ Safe Mode viewing (4-5 sample tabs)
+- ✅ Local storage of downloaded profiles
+
+**v2.0 (Dec 2026)**: Community repository
+- 🌐 Launch perspectives.algorithm-shield.org
+- 📤 Upload profiles (anonymous)
+- 📥 Browse and download profiles
+- 🏷️ Tag-based categorization
+
+**v3.0 (Mar 2027)**: Advanced features
+- 🔍 Comparison tool (your feed vs perspective)
+- 📊 Diversity metrics dashboard
+- 🎓 Educational mode (classroom-ready)
+- 🔗 API for researchers
+
+== File Structure
+
+```
+algorithm-shield/
+├── src/
+│   └── rescript/
+│       └── perspectives/
+│           ├── ProfileExporter.res       # Export feed → .aep
+│           ├── ProfileImporter.res       # Import .aep → profile
+│           ├── PerspectiveViewer.res     # Apply profile (safe mode)
+│           └── ProfileAnonymizer.res     # Strip PII
+│
+└── docs/
+    └── PERSPECTIVE-SHARING-SYSTEM.adoc   # This file
+```
+
+**Added to manifest.json**:
+
+```json
+{
+  "permissions": [
+    "storage",  // Already have
+    "downloads" // NEW: For exporting .aep files
+  ]
+}
+```
+
+== Example Workflow
+
+**Scenario: Understanding racial bias in search**
+
+1. **User A (Black woman)** exports her profile
+   - Notices search results assume race (hair care, fashion)
+   - Exports anonymized profile with description
+   - Shares file via Discord server
+
+2. **User B (White man)** imports the profile
+   - Downloads .aep file
+   - Clicks "Try Perspective" in extension
+   - Opens 4 tabs with User A's typical feed
+
+3. **User B sees**:
+   - Same search query → completely different results
+   - Algorithm makes racial assumptions
+   - "Professional hair" → "Natural hair in workplace"
+
+4. **User B gains empathy**:
+   - "I never realized the algorithm does this!"
+   - Shares insight on social media
+   - Downloads 3 more perspectives to learn more
+
+**Result**: Algorithmic bias becomes **experiential**, not just conceptual
+
+---
+
+**Summary**:
+
+✅ **Lightweight**: 5-10KB JSON files, no heavy infrastructure
+✅ **Privacy-preserving**: No PII, multiple anonymity levels, opt-in only
+✅ **Empathy-building**: "Walk a mile" in others' algorithmic shoes
+✅ **Educational**: Classroom-ready, research-friendly
+✅ **Community-driven**: Users share voluntarily, no central authority
+
+**"The most powerful way to understand algorithmic bias is to experience it."**
+
+This doesn't add much load to Algorithm Shield - just import/export + optional repository.
+The real power is in the **community** - people sharing their experiences to build collective understanding.

@@ -1,0 +1,36 @@
+= disinfo-nsai-detector - Citation Guide
+:toc:
+
+== BibTeX
+
+[source,bibtex]
+----
+@software{disinfo-nsai-detector_2025,
+  author = {Polymath, Hyper},
+  title = {disinfo-nsai-detector},
+  year = {2025},
+  url = {https://github.com/hyperpolymath/disinfo-nsai-detector},
+  license = {AGPL-3.0-or-later}
+}
+----
+
+== Harvard Style
+
+Polymath, H. (2025) _disinfo-nsai-detector_ [Computer software]. Available at: https://github.com/hyperpolymath/disinfo-nsai-detector
+
+== OSCOLA
+
+Hyper Polymath, 'disinfo-nsai-detector' (2025) <https://github.com/hyperpolymath/disinfo-nsai-detector>
+
+== MLA
+
+Polymath, Hyper. "disinfo-nsai-detector." 2025, github.com/hyperpolymath/disinfo-nsai-detector.
+
+== APA 7
+
+Polymath, H. (2025). _disinfo-nsai-detector_ [Computer software]. GitHub. https://github.com/hyperpolymath/disinfo-nsai-detector
+
+== See Also
+
+* link:../CITATION.cff[CITATION.cff]
+* link:../codemeta.json[codemeta.json]

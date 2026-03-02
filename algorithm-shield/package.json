@@ -1,0 +1,13 @@
+{
+  "name": "algorithm-shield",
+  "version": "0.1.0",
+  "description": "Programmable membrane for crossing filter-bubble walls",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@rescript/core": "^1.8.0"
+  },
+  "devDependencies": {
+    "rescript": "^11.1.0"
+  }
+}

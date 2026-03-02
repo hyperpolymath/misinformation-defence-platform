@@ -1,0 +1,623 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Polymorphic & Metamorphic Functionality in Algorithm Shield
+:toc:
+:toc-placement!:
+
+How Algorithm Shield uses polymorphism and metamorphism to evade detection and confuse algorithms.
+
+toc::[]
+
+== Definitions
+
+**Polymorphism**: Same behavior, different appearance each time
+- _Like a chameleon changing color but staying a chameleon_
+- Multiple implementations of the same interface
+- Changes appearance to match context
+
+**Metamorphism**: Complete transformation while maintaining core function
+- _Like a caterpillar becoming a butterfly_
+- Rewrites itself completely between executions
+- Unrecognizable as the same entity
+
+**In security/evasion context**:
+- **Polymorphic code**: Changes its "shape" (patterns, timing, sequences) while doing the same thing
+- **Metamorphic code**: Completely rewrites its behavior while achieving the same goal
+
+== Current Polymorphic Features
+
+=== 1. Human Timing System (Polymorphic Delays)
+
+**What it is**: Timing patterns change every execution
+
+**Implementation**: `src/rescript/actuator/HumanTiming.res`
+
+```rescript
+module TimingProfile = {
+  // POLYMORPHIC: Different delay each time
+  let preClick = (): float => {
+    let base = 80.0  // 80ms base
+    let jitter = Random.float(40.0)  // ±40ms
+    base +. jitter  // Range: 80-120ms, different every time
+  }
+
+  let betweenActions = (): float => {
+    let base = 500.0
+    let jitter = Random.float(300.0)
+    base +. jitter  // Range: 500-800ms
+  }
+
+  let scrollPace = (): float => {
+    let base = 150.0
+    let jitter = Random.float(100.0)
+    base +. jitter  // Range: 150-250ms per scroll step
+  }
+}
+```
+
+**Polymorphic behavior**:
+- Every click has a different pre-click delay
+- Every tab opening has a different wait time
+- Scroll speed varies randomly
+- Typing speed varies (35-65 WPM with typos)
+
+**Why this matters**: Bot detection looks for "metronomic" (perfectly regular) timing
+- Human: 508ms, 523ms, 491ms, 516ms ✅ Polymorphic
+- Bot: 500ms, 500ms, 500ms, 500ms ❌ Static pattern
+
+=== 2. Mouse Jitter (Polymorphic Click Positions)
+
+**What it is**: Never click exactly at center
+
+**Implementation**: `HumanTiming.res`
+
+```rescript
+module MouseJitter = {
+  type jitterStrategy =
+    | NormalDistribution  // Gaussian around center
+    | UniformArea         // Anywhere in clickable area
+    | Quadrant(int)       // Prefer certain screen regions
+
+  // POLYMORPHIC: Different click position each time
+  let applyJitter = (
+    targetX: float,
+    targetY: float,
+    elementWidth: float,
+    elementHeight: float,
+    strategy: jitterStrategy
+  ): (float, float) => {
+    switch strategy {
+    | NormalDistribution => {
+        // Click somewhere within 30-70% of element width/height
+        let jitterX = (Random.float(0.4) +. 0.3) *. elementWidth
+        let jitterY = (Random.float(0.4) +. 0.3) *. elementHeight
+        (targetX +. jitterX -. (elementWidth /. 2.0),
+         targetY +. jitterY -. (elementHeight /. 2.0))
+      }
+    | _ => (targetX, targetY)  // Other strategies
+    }
+  }
+}
+```
+
+**Polymorphic behavior**:
+- Every click on a button hits a different pixel
+- Bots click (100, 100) exactly every time ❌
+- Humans click nearby: (98, 103), (101, 99), (97, 102) ✅
+
+=== 3. Lens Selection (Polymorphic Bubble-Crossing)
+
+**What it is**: Same goal (break filter bubble), different methods
+
+**Implementation**: `src/rescript/lens/Lens.res`
+
+```rescript
+// POLYMORPHIC: 5 different ways to achieve same goal (bubble escape)
+
+let applyLens = (lensType, feedState, config) => {
+  switch lensType {
+  | Opposition => applyOppositionLens(...)      // Method 1: Opposite viewpoints
+  | RandomWalk => applyRandomWalkLens(...)      // Method 2: Completely random
+  | TimeShift => applyTimeShiftLens(...)        // Method 3: Non-trending content
+  | Locality => applyLocalityLens(...)          // Method 4: Geographic diversity
+  | Serendipity => applySerendipityLens(...)    // Method 5: Maximum surprise
+  }
+}
+```
+
+**Polymorphic behavior**:
+- Goal: Confuse YouTube's recommendation algorithm
+- Method changes each time user clicks "Membrane Breach"
+- Algorithm sees: Tech → Art (Monday), Tech → History (Tuesday), Tech → Local (Wednesday)
+- Pattern is unpredictable = unprofileable
+
+=== 4. Persona System (Polymorphic User Profiles)
+
+**What it is**: Browse as different "people"
+
+**Implementation**: `src/rescript/persona/Persona.res` (stubbed)
+
+```rescript
+// POLYMORPHIC: Same user, multiple browsing personas
+
+type persona =
+  | Gardener      // Interested in plants, sustainability, cooking
+  | TechSkeptic   // Privacy-focused, critical of big tech
+  | ArtStudent    // Creative, visual arts, culture
+  | Custom(string, array<ContentSignal.category>)
+
+let applyPersona = (persona: persona, action: browsing_action) => {
+  // Modify behavior based on active persona
+  switch persona {
+  | Gardener => {
+      // Click patterns: slower, more intentional
+      // Search history: plants, recipes, composting
+      // Time on page: longer (reads carefully)
+    }
+  | TechSkeptic => {
+      // Click patterns: fast, targeted
+      // Search history: privacy tools, decentralization
+      // Time on page: quick scan, lots of tabs
+    }
+  | ArtStudent => {
+      // Click patterns: visual browsing, image focus
+      // Search history: galleries, exhibitions, techniques
+      // Time on page: moderate, visual attention
+    }
+  }
+}
+```
+
+**Polymorphic behavior**:
+- Monday: Browse as Gardener (slow, careful, sustainability-focused)
+- Tuesday: Browse as Tech Skeptic (fast, privacy-focused)
+- Wednesday: Browse as Art Student (visual, creative)
+- Algorithm can't build stable profile - you keep "changing"
+
+=== 5. Random Walk Topics (Polymorphic Content Selection)
+
+**What it is**: Topic selection is randomized
+
+**Implementation**: `Lens.res`
+
+```rescript
+let diverseTopics = [
+  ("origami tutorials", ContentSignal.Art),
+  ("mycology foraging", ContentSignal.Education),
+  ("esperanto language", ContentSignal.Education),
+  // ... 15 topics total
+]
+
+// POLYMORPHIC: Randomly select 3-5 topics
+let numToSelect = Int.fromFloat(3.0 +. Random.float(3.0))  // 3-5
+for _ in 0 to numToSelect - 1 {
+  let randomIdx = Int.fromFloat(Random.float(Int.toFloat(Array.length(diverseTopics))))
+  // Different topics each time!
+}
+```
+
+**Polymorphic behavior**:
+- Run 1: Opens origami, mycology, brutalist architecture
+- Run 2: Opens esperanto, fermentation, permaculture
+- Run 3: Opens circuit bending, bio-architecture, systems thinking
+- Never the same combination twice
+
+== Current Metamorphic Features
+
+=== 1. Scroll Inertia (Metamorphic Scrolling Behavior)
+
+**What it is**: Scrolling pattern rewrites itself based on history
+
+**Implementation**: `HumanTiming.res`
+
+```rescript
+module ScrollInertia = {
+  type state = {
+    velocity: float,           // Current scroll speed
+    lastScrollTime: float,     // Timestamp of last scroll
+    friction: float,           // How quickly velocity decays
+  }
+
+  // METAMORPHIC: Behavior changes based on accumulated state
+  let updateInertia = (state: state, newScroll: float): state => {
+    let timeDelta = Date.now() -. state.lastScrollTime
+
+    // If user paused, velocity decays (friction)
+    let decayedVelocity = state.velocity *. exp(-. state.friction *. timeDelta)
+
+    // New velocity = old velocity (decayed) + new input
+    let newVelocity = decayedVelocity +. newScroll
+
+    // METAMORPHIC: Friction itself changes based on velocity!
+    let adaptiveFriction = if newVelocity > 1000.0 {
+      0.003  // High speed = more friction (slow down)
+    } else {
+      0.001  // Low speed = less friction (maintain)
+    }
+
+    {
+      velocity: newVelocity,
+      lastScrollTime: Date.now(),
+      friction: adaptiveFriction,  // Friction self-modifies!
+    }
+  }
+}
+```
+
+**Metamorphic behavior**:
+- Behavior at t=0: Fast scrolling, low friction
+- Behavior at t=5s: Slower, high friction (tired of scrolling)
+- Behavior at t=10s: Variable friction based on accumulated velocity
+- The scrolling behavior "evolves" over the session
+
+**Why this is metamorphic**: The scrolling algorithm itself changes its parameters dynamically
+
+=== 2. Detection Evasion (Metamorphic Strategy Switching)
+
+**What it is**: If bot detection is suspected, change strategy completely
+
+**Implementation**: `HumanTiming.res` (planned)
+
+```rescript
+module DetectionEvasion = {
+  type detectionLevel =
+    | None            // No detection suspected
+    | Low             // Possible detection
+    | High            // Likely detected
+    | Confirmed       // Definitely detected (CAPTCHA shown)
+
+  type strategyProfile = {
+    timingVariance: float,     // How much to vary delays
+    patternComplexity: int,    // Complexity of action sequences
+    pauseFrequency: float,     // How often to pause naturally
+  }
+
+  // METAMORPHIC: Completely change behavior based on detection level
+  let selectStrategy = (level: detectionLevel): strategyProfile => {
+    switch level {
+    | None => {
+        // Normal operation - moderate variance
+        timingVariance: 0.3,
+        patternComplexity: 2,
+        pauseFrequency: 0.1,
+      }
+    | Low => {
+        // Increase randomness
+        timingVariance: 0.5,
+        patternComplexity: 3,
+        pauseFrequency: 0.2,
+      }
+    | High => {
+        // METAMORPHIC SHIFT: Completely different timing profile
+        timingVariance: 0.8,        // Much more random
+        patternComplexity: 5,        // Complex action sequences
+        pauseFrequency: 0.4,         // Frequent pauses (look human)
+      }
+    | Confirmed => {
+        // METAMORPHIC SHUTDOWN: Stop all automated actions
+        // Revert to manual user control
+        timingVariance: 0.0,
+        patternComplexity: 0,
+        pauseFrequency: 1.0,  // Only do what user explicitly requests
+      }
+    }
+  }
+}
+```
+
+**Metamorphic behavior**:
+- Stage 1: Normal browsing (variance: 0.3, complexity: 2)
+- Stage 2: Detection suspected (variance: 0.5, complexity: 3) - **rewrites timing behavior**
+- Stage 3: High detection (variance: 0.8, complexity: 5) - **completely different strategy**
+- Stage 4: Confirmed detection - **shutdown, full metamorphosis to manual mode**
+
+**Why this is metamorphic**: The algorithm doesn't just tweak parameters - it switches to an entirely different behavioral model
+
+=== 3. Lens Rotation (Metamorphic Lens Strategy)
+
+**What it is**: Lens selection pattern evolves over time
+
+**Planned Implementation**:
+
+```rescript
+module LensRotation = {
+  type rotationStrategy =
+    | Fixed(Membrane.State.lensType)              // Always use same lens (not metamorphic)
+    | RoundRobin(array<Membrane.State.lensType>)  // Cycle through (polymorphic)
+    | Adaptive(learningState)                      // Learn and evolve (METAMORPHIC)
+
+  type learningState = {
+    lensEffectiveness: Dict.t<float>,  // How well each lens works
+    platformBehavior: Dict.t<string>,  // Platform responses
+    detectionEvents: array<float>,     // Timestamps of suspected detection
+  }
+
+  // METAMORPHIC: Strategy evolves based on effectiveness
+  let selectNextLens = (state: learningState): Membrane.State.lensType => {
+    // Analyze which lenses are most effective
+    let effectivenessScores = [
+      (Opposition, state.lensEffectiveness->Dict.get("Opposition")->Option.getOr(0.5)),
+      (RandomWalk, state.lensEffectiveness->Dict.get("RandomWalk")->Option.getOr(0.5)),
+      (TimeShift, state.lensEffectiveness->Dict.get("TimeShift")->Option.getOr(0.5)),
+      (Locality, state.lensEffectiveness->Dict.get("Locality")->Option.getOr(0.5)),
+      (Serendipity, state.lensEffectiveness->Dict.get("Serendipity")->Option.getOr(0.5)),
+    ]
+
+    // If detection events are increasing, METAMORPHOSE strategy
+    let recentDetections = countRecentDetections(state.detectionEvents, 3600000.0)  // Last hour
+    if recentDetections > 3 {
+      // METAMORPHIC SHIFT: Stop using the most-used lens, switch to least-used
+      let leastUsedLens = findLeastUsedLens(state)
+      Console.log("Detection suspected - metamorphosing to least-used lens")
+      leastUsedLens
+    } else {
+      // Normal operation: probabilistic selection weighted by effectiveness
+      selectWeightedRandom(effectivenessScores)
+    }
+  }
+
+  // METAMORPHIC: Update effectiveness based on outcomes
+  let updateEffectiveness = (
+    state: learningState,
+    lens: Membrane.State.lensType,
+    outcome: {diversityIncrease: float, detectionTriggered: bool}
+  ): learningState => {
+    // If lens increased diversity AND didn't trigger detection: reward
+    let reward = if outcome.detectionTriggered {
+      -0.2  // Penalize lenses that trigger detection
+    } else {
+      outcome.diversityIncrease *. 0.1  // Reward based on diversity gain
+    }
+
+    // Update lens effectiveness score (learning/evolving)
+    let lensKey = lensTypeToString(lens)
+    let currentScore = state.lensEffectiveness->Dict.get(lensKey)->Option.getOr(0.5)
+    let newScore = currentScore +. reward
+
+    // METAMORPHIC: The strategy's "brain" has evolved
+    {
+      ...state,
+      lensEffectiveness: state.lensEffectiveness->Dict.set(lensKey, newScore)
+    }
+  }
+}
+```
+
+**Metamorphic behavior**:
+- Week 1: All lenses equally likely (effectiveness: 0.5 each)
+- Week 2: RandomWalk detected 3× → effectiveness drops to 0.2 → used less
+- Week 3: Opposition never detected, high diversity → effectiveness rises to 0.8 → used more
+- Week 4: Algorithm has **metamorphosed** - completely different lens selection probabilities
+
+**Why this is metamorphic**: The decision-making algorithm itself evolves, not just parameters
+
+== Potential Metamorphic Features (Future)
+
+=== 1. Self-Modifying Minikaren Rules (v2.0)
+
+**Concept**: Rule engine rewrites its own rules based on outcomes
+
+```rust
+// In Rust WASM rule engine
+struct MetamorphicRule {
+    original_rule: Rule,
+    mutations: Vec<RuleMutation>,
+    effectiveness_score: f64,
+}
+
+impl MetamorphicRule {
+    // METAMORPHIC: Rule rewrites itself
+    fn evolve(&mut self, outcome: RuleOutcome) {
+        if outcome.triggered_detection {
+            // Mutate rule to be less detectable
+            self.mutations.push(RuleMutation::AddRandomDelay);
+            self.mutations.push(RuleMutation::ChangeActionOrder);
+
+            // Rewrite rule AST
+            self.original_rule = self.apply_mutations();
+        }
+
+        if outcome.diversity_increase < 0.1 {
+            // Rule isn't effective, METAMORPHOSE to different logic
+            self.original_rule = self.generate_alternative_rule();
+        }
+    }
+}
+```
+
+**Metamorphic behavior**:
+- Rule v1: `if (bubble_score > 0.7) then open_random_walk(3)`
+- Detected → Mutates to: `if (bubble_score > random(0.6..0.8)) then open_random_walk(random(2..5)) after delay(random(1..5s))`
+- Still detected → METAMORPHOSES to completely different rule: `if (time_since_last_breach > 10min) then open_opposition(1)`
+
+=== 2. Header Signature Rotation (v2.0)
+
+**Concept**: HTTP headers change to match different "fingerprints"
+
+```rescript
+module HeaderMetamorphosis = {
+  type browserFingerprint = {
+    userAgent: string,
+    acceptLanguage: string,
+    acceptEncoding: string,
+    dnt: string,
+    platformHints: Dict.t<string>,
+  }
+
+  // METAMORPHIC: Cycle through realistic browser fingerprints
+  let fingerprintProfiles = [
+    // Profile 1: Windows 10 Chrome (most common - blend in)
+    {
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...",
+      acceptLanguage: "en-US,en;q=0.9",
+      // ...
+    },
+    // Profile 2: macOS Safari (less common - stand out differently)
+    {
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15...",
+      acceptLanguage: "en-US,en;q=0.9",
+      // ...
+    },
+    // Profile 3: Linux Firefox (rare - maximum differentiation)
+    {
+      userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
+      acceptLanguage: "en-US,en;q=0.8",
+      // ...
+    },
+  ]
+
+  let currentProfileIndex = ref(0)
+  let sessionCount = ref(0)
+
+  // METAMORPHIC: Every N sessions, switch to different fingerprint
+  let getActiveFingerprint = (): browserFingerprint => {
+    sessionCount := sessionCount.contents + 1
+
+    // Every 5 sessions, METAMORPHOSE to different fingerprint
+    if mod(sessionCount.contents, 5) == 0 {
+      currentProfileIndex := mod(currentProfileIndex.contents + 1, Array.length(fingerprintProfiles))
+      Console.log("Metamorphosing browser fingerprint...")
+    }
+
+    fingerprintProfiles[currentProfileIndex.contents]
+  }
+}
+```
+
+**Metamorphic behavior**:
+- Sessions 1-5: Fingerprint A (Windows Chrome)
+- Sessions 6-10: Fingerprint B (macOS Safari) - **complete header metamorphosis**
+- Sessions 11-15: Fingerprint C (Linux Firefox) - **different again**
+- Algorithm thinks you're 3 different people!
+
+=== 3. WASM Code Mutation (v3.0 - Advanced)
+
+**Concept**: The WASM binary itself mutates while maintaining functionality
+
+**EXTREME CAUTION**: This is actual metamorphic code like malware uses. Only do this if:
+1. Fully disclosed to user
+2. Proven with formal verification
+3. Non-destructive transformations only
+
+```rust
+// Hypothetical - DO NOT IMPLEMENT without formal verification
+struct MetamorphicWASM {
+    bytecode: Vec<u8>,
+    mutation_count: u32,
+}
+
+impl MetamorphicWASM {
+    // METAMORPHIC: Rewrite WASM bytecode
+    fn mutate(&mut self) {
+        // Apply non-functional transformations:
+        // 1. Reorder independent instructions
+        // 2. Insert no-op instructions (dead code)
+        // 3. Change register allocation
+        // 4. Equivalent instruction substitution (x*2 → x+x)
+
+        // Result: WASM hash changes, behavior identical
+        self.bytecode = apply_semantic_preserving_mutations(self.bytecode);
+        self.mutation_count += 1;
+    }
+}
+```
+
+**Metamorphic behavior**:
+- Load 1: WASM hash `a1b2c3...`
+- Load 2: WASM hash `d4e5f6...` (different bytes, same behavior)
+- Load 3: WASM hash `g7h8i9...` (different again)
+- Fingerprinting via WASM hash fails - it keeps changing!
+
+**WARNING**: This is advanced and ethically complex. Requires:
+- Formal verification that mutations preserve semantics
+- Full transparency to user
+- Open source (prove no malicious mutations)
+
+== Polymorphism vs Metamorphism Summary
+
+**Polymorphic (what we have)**:
+✅ Human timing (different delays)
+✅ Mouse jitter (different click positions)
+✅ Lens selection (different methods for same goal)
+✅ Random Walk topics (different combinations)
+✅ Personas (different browsing profiles)
+
+**Metamorphic (partial)**:
+⚠️ Scroll inertia (behavior evolves over session) - IMPLEMENTED
+⚠️ Detection evasion (strategy switches based on detection) - PLANNED
+⚠️ Lens rotation (learning-based lens selection) - PLANNED
+
+**Metamorphic (future)**:
+🔮 Self-modifying Minikaren rules (v2.0)
+🔮 Header signature rotation (v2.0)
+🔮 WASM code mutation (v3.0+, requires formal verification)
+
+== Implementation Priorities
+
+**v1.0 (Jun 2026)** - Strengthen polymorphism:
+- [x] Human timing ✅
+- [x] Mouse jitter ✅
+- [x] Random lens selection ✅
+- [ ] Full persona implementation
+- [ ] Polymorphic header injection (User-Agent rotation)
+
+**v1.5 (Sep 2026)** - Basic metamorphism:
+- [ ] Detection evasion with strategy switching
+- [ ] Scroll inertia with adaptive friction
+- [ ] Lens effectiveness learning
+
+**v2.0 (Dec 2026)** - Advanced metamorphism:
+- [ ] Self-modifying Minikaren rules
+- [ ] Header fingerprint rotation
+- [ ] Ephapax hot path polymorphism (different codepaths for same operation)
+
+**v3.0+ (2027)** - Extreme metamorphism (if needed):
+- [ ] WASM bytecode mutation (with proven verification!)
+- [ ] Network protocol polymorphism (HTTP/2 vs HTTP/3 switching)
+- [ ] Encryption of action logs with metamorphic key derivation
+
+== Ethical Considerations
+
+**✅ Ethical polymorphism/metamorphism**:
+- Timing randomization (mimic humans)
+- Lens diversity (broaden worldview)
+- Persona switching (explore different perspectives)
+- Detection evasion (avoid being pigeonholed)
+
+**⚠️ Ethically complex**:
+- Header spoofing (misrepresent browser)
+- Code mutation (looks like malware techniques)
+- Must be fully disclosed and user-controlled
+
+**❌ Unethical**:
+- Metamorphic code that hides its purpose
+- Evasion of security measures (CAPTCHA bypass, auth bypass)
+- Anything the user doesn't understand or consent to
+
+**Our principle**: Every polymorphic/metamorphic feature must be:
+1. **Transparent**: User understands what it does
+2. **Beneficial**: Serves user's interest (not ours)
+3. **Narratable**: Can be explained in plain language
+4. **Reversible**: User can turn it off
+
+== Technical Implementation
+
+**Key modules**:
+- `HumanTiming.res` - Polymorphic timing, metamorphic inertia
+- `Lens.res` - Polymorphic bubble-crossing strategies
+- `Persona.res` - Polymorphic user profiles
+- `DetectionEvasion.res` (planned) - Metamorphic strategy switching
+- `LensRotation.res` (planned) - Metamorphic learning
+
+**WASM integration** (v2.0):
+- Ephapax hot paths can have polymorphic implementations
+- Rust FFI glue provides metamorphic strategy selection
+- proven library guarantees transformations are safe
+
+---
+
+**Summary**: We have strong polymorphism (timing, lens selection, personas) and emerging metamorphism (scroll inertia, detection evasion). Future versions can add self-modifying rules and code mutation, but only with formal verification and full transparency.
+
+The goal: Be **unprofileable**, not invisible. Polymorphism keeps you unpredictable. Metamorphism makes you unrecognizable over time.

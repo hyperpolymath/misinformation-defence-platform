@@ -1,0 +1,233 @@
+= Algorithm Shield - Testing Guide
+:toc:
+:toc-placement!:
+
+[.lead]
+How to test Algorithm Shield in Chrome (v0.1 test build)
+
+toc::[]
+
+== Prerequisites
+
+* Chrome or Chromium browser
+* Developer mode enabled
+
+== Loading the Extension
+
+=== Step 1: Open Extensions Page
+
+Navigate to: `chrome://extensions`
+
+Or: Menu → Extensions → Manage Extensions
+
+=== Step 2: Enable Developer Mode
+
+Toggle "Developer mode" switch (top-right corner)
+
+=== Step 3: Load Unpacked Extension
+
+1. Click "Load unpacked" button
+2. Navigate to: `algorithm-shield/dist/`
+3. Click "Select Folder"
+
+=== Step 4: Verify Load
+
+Extension should appear in list with:
+
+* **Name**: Algorithm Shield
+* **ID**: (auto-generated)
+* **Icon**: Shield with wave pattern
+* **Status**: Enabled
+
+== Testing Checklist
+
+=== ✅ Basic Functionality
+
+[ ] **Extension loads without errors**
+   - No red error text in extensions page
+   - Service worker shows as "active"
+
+[ ] **Icon appears in toolbar**
+   - Shield icon visible in browser toolbar
+   - Click to open popup
+
+[ ] **Popup UI displays**
+   - Popup opens (360x500px window)
+   - Shows "Algorithm Shield" header
+   - Shows membrane thickness bar
+   - Shows lens and persona cards
+
+[ ] **Background page runs**
+   - Click "Service Worker" link in extensions page
+   - Console should show: "🛡️ Algorithm Shield background worker active"
+   - No errors in console
+
+[ ] **Content script injects**
+   - Open any website (e.g., youtube.com)
+   - Open Developer Tools (F12)
+   - Console should show: "🛡️ Algorithm Shield active"
+   - No errors
+
+=== ⚠️ Known Limitations (v0.1)
+
+[ ] **ReScript modules not bundled**
+   - Need Node 14+ to compile
+   - Currently using vanilla JS fallback
+
+[ ] **WASM not loaded**
+   - Rule engine exists but not integrated yet
+   - Will add in next build
+
+[ ] **Popup state doesn't persist**
+   - chrome.storage not fully wired yet
+   - State resets on popup close
+
+[ ] **No platform adapters active**
+   - YouTube adapter exists but not activated
+   - No feed analysis yet
+
+== Manual Tests
+
+=== Test 1: Popup Interaction
+
+1. Click extension icon
+2. Click "Breach Membrane" button
+   - Should log to console (no action yet)
+3. Click lens cards (Opposition, Random Walk, etc.)
+   - Cards should highlight
+   - State should update (check chrome.storage in DevTools)
+4. Click persona cards
+   - Cards should highlight
+   - Mode indicator should change
+
+=== Test 2: Console Logs
+
+1. Open YouTube
+2. Open DevTools → Console
+3. Verify logs:
+   - "🛡️ Algorithm Shield active"
+   - "👁️ Observing feed..." (when scrolling)
+
+=== Test 3: Background Worker
+
+1. Go to `chrome://extensions`
+2. Find Algorithm Shield
+3. Click "Service Worker" link
+4. Check console for:
+   - Initialization message
+   - No errors
+   - State changes when using popup
+
+== Troubleshooting
+
+=== Extension won't load
+
+**Error**: "Manifest file is missing or unreadable"
+
+**Fix**: Ensure `manifest.json` exists in selected folder
+
+---
+
+**Error**: "Service worker registration failed"
+
+**Fix**: Check `background.js` syntax errors
+
+---
+
+**Error**: "Extension icon doesn't appear"
+
+**Fix**: Verify icons exist:
+```bash
+ls assets/icon-*.png
+```
+
+Should show: icon-16.png, icon-48.png, icon-128.png
+
+=== Popup won't open
+
+**Error**: Clicking icon does nothing
+
+**Fix**:
+1. Right-click extension icon → Inspect popup
+2. Check for errors in popup DevTools
+3. Verify `popup.html` and `popup.js` exist in dist/
+
+=== Content script not injecting
+
+**Error**: No console log on web pages
+
+**Fix**:
+1. Check manifest.json `content_scripts` section
+2. Verify `content.js` exists in dist/
+3. Check for CSP errors in console
+4. Try reloading the extension
+
+=== WASM errors
+
+**Error**: "Failed to load WASM module"
+
+**Expected**: WASM is not integrated yet in v0.1
+
+**Fix**: Wait for next build (v0.2) with bundled modules
+
+== Development Testing
+
+=== Hot Reload
+
+After making changes:
+
+1. Go to `chrome://extensions`
+2. Click refresh icon on Algorithm Shield card
+3. Reload any open tabs
+4. Test changes
+
+=== Console Debugging
+
+**Background worker console**:
+```
+chrome://extensions → Service Worker → Console
+```
+
+**Popup console**:
+```
+Right-click icon → Inspect popup → Console
+```
+
+**Content script console**:
+```
+Any web page → F12 → Console
+```
+
+== Next Testing Phase (v0.2)
+
+Once Node upgraded and ReScript bundled:
+
+1. Test WASM rule engine loading
+2. Test YouTube feed analysis
+3. Test membrane breach action
+4. Test persona switching
+5. Test human timing delays
+
+== Reporting Issues
+
+When reporting issues, include:
+
+1. Chrome version: `chrome://version`
+2. Extension errors: Screenshot from `chrome://extensions`
+3. Console logs: Copy from DevTools
+4. Steps to reproduce
+5. Expected vs actual behavior
+
+== Success Criteria (v0.1)
+
+Extension passes v0.1 testing when:
+
+- [x] Loads without errors
+- [x] Icon appears and popup opens
+- [x] Background worker runs
+- [x] Content script injects
+- [ ] No console errors
+- [ ] State persists in chrome.storage
+- [ ] Lens/persona clicks update UI
+
+(Note: Last 3 items pending full ReScript integration)

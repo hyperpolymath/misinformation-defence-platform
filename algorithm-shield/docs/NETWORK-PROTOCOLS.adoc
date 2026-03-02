@@ -1,0 +1,587 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Algorithm Shield - Advanced Network Protocols
+:toc:
+:toc-placement!:
+
+[.lead]
+Leveraging IPv6, QUIC, HTTP/3, and selective HTTP methods for enhanced privacy and performance.
+
+toc::[]
+
+== Protocol Stack
+
+```
+Application Layer:  Algorithm Shield (ReScript)
+                          ↓
+Transport Layer:    QUIC (UDP-based)
+                          ↓
+Network Layer:      IPv6 (128-bit addresses)
+                          ↓
+Fingerprinting:     Protocol diversity → privacy
+```
+
+== IPv6 Integration
+
+=== Why IPv6 Matters for Privacy
+
+**Problem with IPv4**:
+- Limited address space → NAT required
+- NAT creates stable external IP
+- Easy to track across sessions
+
+**IPv6 Advantage**:
+- 128-bit addresses (2^128 possible)
+- Privacy Extensions (RFC 4941)
+- Temporary addresses rotate automatically
+- Harder to correlate across sessions
+
+=== Privacy Extensions Usage
+
+```rescript
+// src/rescript/network/IPv6Privacy.res
+
+// Check if IPv6 privacy extensions enabled
+let hasIPv6Privacy = async (): bool => {
+  // Use WebRTC to detect local IPv6 addresses
+  let addresses = await getLocalIPAddresses()
+
+  // Check if using temporary (privacy) addresses
+  // Temporary addresses change over time
+  // Format: 2001:db8::/64 with random interface ID
+  addresses->Array.some(addr =>
+    addr->String.startsWith("2001:") &&
+    !addr->String.includes("::1") // Not loopback
+  )
+}
+
+// Recommend enabling privacy extensions if not active
+let recommendIPv6Privacy = async (): unit => {
+  let hasPrivacy = await hasIPv6Privacy()
+  if !hasPrivacy {
+    Console.warn("IPv6 privacy extensions not detected")
+    Console.info("Enable in system settings for better anonymity")
+  }
+}
+```
+
+**OS Configuration**:
+```bash
+# Linux (systemd)
+echo "net.ipv6.conf.all.use_tempaddr = 2" >> /etc/sysctl.conf
+
+# macOS
+networksetup -setv6automatic Wi-Fi
+
+# Windows
+netsh interface ipv6 set privacy state=enabled
+```
+
+=== IPv6-Based Persona Routing (v2.0)
+
+**Concept**: Different personas use different IPv6 addresses
+
+```rescript
+// Each persona gets dedicated IPv6 address
+module PersonaIPv6 = {
+  type binding = {
+    personaId: string,
+    ipv6Address: string,
+    expiryTime: float,
+  }
+
+  // Request OS to bind persona to specific IPv6
+  let bindPersonaToAddress = async (personaId: string): result<string, error> => {
+    // Use IPv6 privacy extensions to generate temporary address
+    // Bind specific network requests to this address
+    // Rotate address when persona changes
+  }
+}
+```
+
+**Benefit**: Network-level persona isolation
+
+---
+
+== QUIC / HTTP/3
+
+=== Why QUIC Matters
+
+**Traditional HTTP/1.1 over TCP**:
+- Head-of-line blocking
+- Handshake latency (TCP + TLS)
+- Connection migration issues
+
+**HTTP/2 over TCP**:
+- Still has TCP head-of-line blocking
+- Multiplexing helps but not perfect
+
+**HTTP/3 over QUIC**:
+- UDP-based (no head-of-line blocking)
+- Built-in TLS 1.3 (faster handshake)
+- Connection migration (switch networks seamlessly)
+- **0-RTT connection resumption**
+
+=== QUIC for Membrane Breach Speed
+
+**Use case**: Fast membrane breach requires quick content loading
+
+```rescript
+// src/rescript/network/QuicRequest.res
+
+// Prefer QUIC/HTTP3 for breach requests
+let fetchWithQUIC = async (url: string): result<response, error> => {
+  // Check if server supports HTTP/3
+  let supportsH3 = await checkAltSvc(url)
+
+  if supportsH3 {
+    // Use HTTP/3 with 0-RTT if available
+    fetch(url, {
+      method: "GET",
+      // Browser automatically uses HTTP/3 if supported
+      cache: "no-store",
+      priority: "high",
+    })
+  } else {
+    // Fallback to HTTP/2
+    fetch(url)
+  }
+}
+```
+
+**Advantage**: 0-RTT means **instant** membrane breach (no connection setup)
+
+---
+
+=== QUIC Connection Migration for Persona Switches
+
+**Problem**: Switching personas mid-session breaks TCP connections
+
+**QUIC Solution**: Connection migration
+
+```rescript
+// Switch persona without breaking connections
+let switchPersonaWithMigration = async (newPersona: string): unit => {
+  // QUIC allows connection to migrate to new IPv6 address
+  // Without re-handshake
+  // Perfect for seamless persona transitions
+
+  let newIPv6 = await PersonaIPv6.bindPersonaToAddress(newPersona)
+
+  // Existing QUIC connections automatically migrate
+  // No visible disruption to user
+}
+```
+
+---
+
+== Selective HTTP Methods
+
+=== Why Method Diversity Matters
+
+**Typical browsing**: 99% GET requests
+
+**Fingerprinting risk**: Unusual method usage is trackable
+
+**Strategy**: Vary methods based on persona + context
+
+=== Method Selection by Persona
+
+```rescript
+// src/rescript/network/HTTPMethods.res
+
+module MethodSelection = {
+  type httpMethod =
+    | GET
+    | HEAD
+    | POST
+    | PUT
+    | DELETE
+    | OPTIONS
+    | PATCH
+
+  // Select method based on persona behavior profile
+  let selectMethod = (
+    persona: PersonaDefinition.t,
+    action: actionType,
+  ): httpMethod => {
+    switch (persona.id, action) {
+    // Tech persona: uses diverse methods (developer-like)
+    | ("tech-skeptic", PreloadCheck) => HEAD  // Check resource without fetching
+    | ("tech-skeptic", FetchData) => GET
+    | ("tech-skeptic", ExploreAPI) => OPTIONS // CORS preflight
+
+    // Gardener persona: conservative methods only
+    | ("gardener", _) => GET  // Always GET (non-technical user)
+
+    // Art student: occasional POST (submitting forms)
+    | ("art-student", SubmitForm) => POST
+    | ("art-student", _) => GET
+
+    | _ => GET  // Default safe fallback
+    }
+  }
+}
+```
+
+---
+
+=== HEAD Requests for Stealth Reconnaissance
+
+**Use case**: Check if resource exists without downloading
+
+```rescript
+// Check if off-distribution URL is valid before membrane breach
+let validateBreachTarget = async (url: string): bool => {
+  try {
+    let response = await fetch(url, {method: "HEAD"})
+    response.ok  // True if 200-299 status
+  } catch {
+    | _ => false
+  }
+}
+
+// Advantage: No bandwidth used, faster breach validation
+```
+
+---
+
+=== OPTIONS for CORS Fingerprinting
+
+**Defensive use**: Detect cross-origin tracking attempts
+
+```rescript
+let detectCORSTracking = async (url: string): corsPolicy => {
+  let response = await fetch(url, {method: "OPTIONS"})
+
+  let allowOrigin = response.headers.get("Access-Control-Allow-Origin")
+  let allowCredentials = response.headers.get("Access-Control-Allow-Credentials")
+
+  if allowOrigin == "*" && allowCredentials == "true" {
+    // Suspicious: Allows any origin WITH credentials
+    // Potential tracking vector
+    warnUser("Site has permissive CORS policy - tracking risk")
+  }
+}
+```
+
+---
+
+=== POST vs GET for Noise Injection
+
+**Strategy**: Vary method to avoid predictable pattern
+
+```rescript
+// Noise injection with method diversity
+let injectNoise = async (targetUrl: string, persona: PersonaDefinition.t): unit => {
+  let method = if Random.probability(0.7) {
+    GET  // 70% GET (normal browsing)
+  } else if persona.id == "tech-skeptic" {
+    // Tech persona sometimes uses POST for noise
+    POST
+  } else {
+    GET
+  }
+
+  await fetch(targetUrl, {
+    method: method,
+    // Include appropriate headers for method
+    headers: method == POST
+      ? {"Content-Type": "application/x-www-form-urlencoded"}
+      : {}
+  })
+}
+```
+
+---
+
+== SPARK Integration (Safety-Critical Rule Verification)
+
+=== Why SPARK for Rules
+
+**Rust**: Fast, type-safe, but not formally verified
+
+**SPARK (Ada)**: Mathematically proven correctness
+
+**Use case**: Verify that rules don't violate safety constraints
+
+---
+
+=== Architecture
+
+```
+User-facing Rules (JSON)
+         ↓
+ReScript Rule Parser
+         ↓
+Rust Rule Engine (minikaren)  ←→  SPARK Verifier
+         ↓
+Actions (executed only if verified)
+```
+
+---
+
+=== SPARK Verification Module
+
+```ada
+-- src/ada/rule_verification.adb
+-- SPARK module for formal verification of shield rules
+
+package Rule_Verification with SPARK_Mode is
+
+   type Rule_Safety_Level is (Safe, Warning, Dangerous, Prohibited);
+
+   -- Verify rule doesn't violate safety constraints
+   function Verify_Rule (Rule_JSON : String) return Rule_Safety_Level
+   with
+      Pre  => Rule_JSON'Length > 0,
+      Post => Verify_Rule'Result /= Prohibited or else
+              (Verify_Rule'Result = Prohibited and then
+               Alert_User ("Rule violates safety policy"));
+
+   -- Check: Rule doesn't exfiltrate data
+   function Ensures_No_Exfiltration (Rule : Rule_Type) return Boolean
+   with
+      Global => null,
+      Post   => (if Ensures_No_Exfiltration'Result then
+                   No_Network_Write (Rule));
+
+   -- Check: Rule doesn't DoS the platform
+   function Respects_Rate_Limits (Rule : Rule_Type) return Boolean
+   with
+      Global => Rate_Limit_State,
+      Post   => (if Respects_Rate_Limits'Result then
+                   Actions_Per_Minute (Rule) <= Max_Rate);
+
+   -- Check: Rule timing is humanlike
+   function Has_Human_Timing (Rule : Rule_Type) return Boolean
+   with
+      Post => (if Has_Human_Timing'Result then
+                 Timing_Variance (Rule) >= Min_Variance);
+
+end Rule_Verification;
+```
+
+---
+
+=== Rust ↔ SPARK FFI/ABI
+
+**Your FFI/ABI** (reference):
+
+```rust
+// src/rust/spark_ffi/mod.rs
+
+// FFI to SPARK verification module
+#[repr(C)]
+pub struct SPARKRule {
+    rule_id: [u8; 32],
+    rule_json: *const u8,
+    rule_len: usize,
+}
+
+extern "C" {
+    // SPARK-verified rule checker
+    pub fn spark_verify_rule(rule: *const SPARKRule) -> u8;
+    // Returns: 0=Safe, 1=Warning, 2=Dangerous, 3=Prohibited
+}
+
+// Rust wrapper
+pub fn verify_rule_safety(rule_json: &str) -> RuleSafetyLevel {
+    let spark_rule = SPARKRule {
+        rule_id: hash_rule(rule_json),
+        rule_json: rule_json.as_ptr(),
+        rule_len: rule_json.len(),
+    };
+
+    unsafe {
+        match spark_verify_rule(&spark_rule) {
+            0 => RuleSafetyLevel::Safe,
+            1 => RuleSafetyLevel::Warning,
+            2 => RuleSafetyLevel::Dangerous,
+            3 => RuleSafetyLevel::Prohibited,
+            _ => RuleSafetyLevel::Prohibited,
+        }
+    }
+}
+```
+
+---
+
+=== Rule Verification Pipeline
+
+```rescript
+// In Rust rule engine (src/rust/minikaren/rules.rs)
+
+impl Rule {
+    pub fn add_rule(&mut self, rule_json: &str) -> Result<(), Error> {
+        // 1. Parse JSON
+        let rule: Rule = serde_json::from_str(rule_json)?;
+
+        // 2. Verify with SPARK
+        let safety = spark_ffi::verify_rule_safety(rule_json);
+
+        match safety {
+            RuleSafetyLevel::Safe => {
+                self.rules.push(rule);
+                Ok(())
+            }
+            RuleSafetyLevel::Warning => {
+                // Warn user but allow
+                warn_user("Rule may have side effects");
+                self.rules.push(rule);
+                Ok(())
+            }
+            RuleSafetyLevel::Dangerous | RuleSafetyLevel::Prohibited => {
+                Err(Error::RuleViolatesSafetyPolicy)
+            }
+        }
+    }
+}
+```
+
+**Benefit**: Provably safe rules. Can't accidentally DoS platform or leak data.
+
+---
+
+== Protocol-Based Fingerprinting Resistance
+
+=== Vary Protocol Version by Persona
+
+```rescript
+// Different personas use different protocol preferences
+
+module ProtocolPersona = {
+  let getProtocolPreference = (persona: PersonaDefinition.t): protocolConfig => {
+    switch persona.id {
+    | "tech-skeptic" =>
+      // Tech persona: aggressive protocol adoption
+      {
+        preferIPv6: true,
+        preferHTTP3: true,
+        enableECH: true,  // Encrypted Client Hello
+        enable0RTT: true,
+      }
+
+    | "gardener" =>
+      // Conservative persona: stable protocols
+      {
+        preferIPv6: false,  // Use IPv4 (more common)
+        preferHTTP3: false,  // Use HTTP/2
+        enableECH: false,
+        enable0RTT: false,
+      }
+
+    | _ => defaultConfig
+    }
+  }
+}
+```
+
+**Fingerprinting defense**: Protocol usage varies by persona, preventing consistent fingerprint
+
+---
+
+=== ECH (Encrypted Client Hello) for SNI Privacy
+
+**Problem**: SNI (Server Name Indication) leaks destination in TLS handshake
+
+**Solution**: ECH encrypts SNI
+
+```rescript
+// Enable ECH when available (Chrome flag: enable-tls-encrypted-client-hello)
+let enableECH = async (): unit => {
+  // Check if browser supports ECH
+  if browserSupportsECH() {
+    // Enable for current persona
+    setProtocolFlag("enable-tls-encrypted-client-hello", true)
+  }
+}
+```
+
+**Benefit**: ISP/network observer can't see which site you're visiting
+
+---
+
+== HTTP/3 Priority Frames for Stealth
+
+**Concept**: HTTP/3 allows request prioritization
+
+**Strategy**: Use priority to mimic human browsing patterns
+
+```rescript
+// High priority: User-visible content
+// Low priority: Background noise injection
+
+let fetchWithPriority = (url: string, isNoise: bool): promise<response> => {
+  fetch(url, {
+    priority: isNoise ? "low" : "high"
+  })
+}
+
+// Real user click: high priority
+// Noise click: low priority
+// Platform may be able to detect difference, but:
+// - More realistic (humans prioritize)
+// - Less suspicious than all same priority
+```
+
+---
+
+== Future: MASQUE Protocol (v5.0)
+
+**MASQUE**: Multiplexed Application Substrate over QUIC Encryption
+
+**What it is**: VPN-like proxying over HTTP/3
+
+**Use case**: Route personas through different MASQUE proxies
+
+```
+Persona A → MASQUE Proxy 1 → Platform
+Persona B → MASQUE Proxy 2 → Platform
+Persona C → Direct connection → Platform
+```
+
+**Benefit**: Network-level persona isolation + IP diversity
+
+---
+
+== Implementation Priorities
+
+=== v1.0 (Jun 2026)
+- [x] HTTP/3 preference detection
+- [ ] HEAD request validation for breach targets
+- [ ] Method selection by persona (basic)
+
+=== v2.0 (Dec 2026)
+- [ ] IPv6 privacy extensions check
+- [ ] SPARK rule verification (safety-critical rules only)
+- [ ] QUIC connection migration for persona switches
+- [ ] ECH enablement where supported
+
+=== v5.0 (Jun 2027)
+- [ ] Full IPv6 persona routing
+- [ ] MASQUE proxy integration
+- [ ] HTTP/3 priority frame manipulation
+- [ ] SPARK verification for all rules
+
+---
+
+== Conclusion
+
+By leveraging modern protocols:
+
+**IPv6**: Rotating addresses per persona
+**QUIC/HTTP/3**: Fast membrane breach, connection migration
+**HTTP Methods**: Behavioral diversity, fingerprinting resistance
+**SPARK**: Formally verified safety constraints
+**ECH**: SNI privacy
+
+Algorithm Shield becomes:
+- **Faster**: QUIC 0-RTT instant breach
+- **Safer**: SPARK-verified rules
+- **Stealthier**: Protocol diversity by persona
+- **Future-proof**: Built on next-gen protocols
+
+**The membrane operates at every layer of the stack.**

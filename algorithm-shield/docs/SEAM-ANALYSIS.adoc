@@ -1,0 +1,773 @@
+// SPDX-License-Identifier: MPL-2.0-or-later
+// Copyright (c) 2026 hyperpolymath
+// Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
+
+= Algorithm Shield - Seam Analysis
+:toc:
+:toc-placement!:
+
+[.lead]
+Analysis of all critical interfaces, boundaries, and integration points in Algorithm Shield, with evolutionary roadmap from v0.1 → v0.5 → v1.0 → v10.0.
+
+toc::[]
+
+== Current State (v0.1.0)
+
+=== Completion Status
+
+* **Overall Progress**: 15%
+* **Scaffolding**: 100% ✓
+* **Compilable Code**: 0% (not yet tested)
+* **Working Features**: None (untested)
+* **Governance**: 90% (missing NEUROSYM, PLAYBOOK, AGENTIC)
+
+=== What Exists
+
+[cols="1,3,1"]
+|===
+|Component |Status |Risk Level
+
+|Project structure |Complete |LOW
+|ReScript modules |Written, uncompiled |MEDIUM
+|Rust WASM engine |Written, unbuilt |MEDIUM
+|Build scripts |Written, untested |HIGH
+|UI mockups |HTML/CSS done, no wiring |MEDIUM
+|Governance (3/6 SCM) |STATE, META, ECOSYSTEM done |LOW
+|Platform adapters |Directories only |HIGH
+|Browser API bindings |Not written |HIGH
+|===
+
+== Critical Seams Analysis
+
+=== Seam 1: ReScript ↔ Browser Extension APIs
+
+**Interface**: Chrome extension APIs (storage, tabs, scripting, runtime)
+
+**Current State**:
+- ReScript code expects these APIs
+- No bindings written
+- Using raw JS for now
+
+**Risks**:
+- Type safety gap
+- Runtime errors if API signatures change
+- No compile-time validation
+
+**Required Before v0.5**:
+- Write bindings for: `chrome.storage.local`, `chrome.tabs`, `chrome.runtime.sendMessage`
+- ReScript external declarations
+
+**Example Missing Binding**:
+[source,rescript]
+----
+// Need to write this in src/rescript/bindings/ChromeStorage.res
+module Local = {
+  @val external get: string => promise<'a> = "chrome.storage.local.get"
+  @val external set: {..} => promise<unit> = "chrome.storage.local.set"
+}
+----
+
+**Complexity**: LOW-MEDIUM (well-defined APIs)
+
+---
+
+=== Seam 2: ReScript ↔ Rust/WASM
+
+**Interface**: WASM module loaded by extension, called from ReScript
+
+**Current State**:
+- Rust code exports `RuleEngine` class
+- ReScript has no bindings yet
+- WASM not built or tested
+
+**Risks**:
+- WASM size overhead (could be >100KB)
+- Serialization/deserialization overhead (JSON boundary)
+- Async loading complexity
+- Browser WASM support
+
+**Required Before v0.5**:
+- Build WASM module successfully
+- Test wasm-bindgen JS glue
+- Write ReScript bindings for `RuleEngine.new()`, `addRule()`, `evaluate()`
+- Handle async WASM initialization
+
+**Example Integration**:
+[source,rescript]
+----
+// src/rescript/bindings/RuleEngine.res
+type t
+@module("./algorithm_shield_engine_bg.wasm")
+external make: unit => promise<t> = "RuleEngine"
+
+@send external addRule: (t, string) => promise<unit> = "add_rule"
+@send external evaluate: (t, string) => promise<string> = "evaluate"
+----
+
+**Complexity**: MEDIUM-HIGH (cross-language boundary, async)
+
+---
+
+=== Seam 3: Content Script ↔ Page DOM
+
+**Interface**: Platform-specific DOM selectors and mutations
+
+**Current State**:
+- Platform adapter directories exist but empty
+- No DOM selectors defined
+- No mutation strategy
+
+**Risks**:
+- **CRITICAL**: Platforms change DOM constantly
+- Selectors break without warning
+- Each platform needs reverse-engineering
+- Race conditions (DOM loads asynchronously)
+
+**Required Before v0.5** (YouTube only):
+- Map YouTube feed DOM structure
+- Identify video tile selectors
+- Implement MutationObserver for feed updates
+- Extract title, channel, thumbnail URLs
+
+**Example Platform Adapter**:
+[source,rescript]
+----
+// src/platforms/youtube/YouTubeAdapter.res
+let feedSelector = "#contents.ytd-rich-grid-renderer"
+let itemSelector = "ytd-rich-item-renderer"
+
+let extractSignals = (document: Dom.document): array<Observer.ContentSignal.t> => {
+  // Query DOM, extract signals
+}
+----
+
+**Complexity**: HIGH (fragile, platform-dependent, maintenance burden)
+
+**Mitigation**:
+- Start with one platform
+- Version selectors with platform UI versions
+- Graceful degradation when selectors fail
+
+---
+
+=== Seam 4: Popup UI ↔ Extension State
+
+**Interface**: chrome.storage + message passing
+
+**Current State**:
+- Popup JS reads/writes `chrome.storage.local`
+- No ReScript integration yet
+- State shape defined but not validated
+
+**Risks**:
+- State drift between popup, background, content scripts
+- No single source of truth
+- Race conditions on concurrent updates
+
+**Required Before v0.5**:
+- Define state schema in ReScript
+- Implement state sync protocol
+- Handle concurrent updates (last-write-wins or CRDT)
+
+**State Synchronization Pattern**:
+[source]
+----
+Background Worker (authoritative)
+    ↓ chrome.storage.local.set()
+    ↓
+Storage Layer
+    ↓ chrome.storage.onChanged listener
+    ↓
+Popup UI (reactive)
+Content Script (reactive)
+----
+
+**Complexity**: MEDIUM (well-understood problem, standard patterns)
+
+---
+
+=== Seam 5: Lens Transformations ↔ Platform Rendering
+
+**Interface**: DOM manipulation to reorder/inject/hide feed items
+
+**Current State**:
+- Lens logic written (abstract)
+- No concrete DOM mutations
+
+**Risks**:
+- Mutations trigger platform re-renders
+- Can cause infinite loops
+- Performance impact (layout thrashing)
+- Visibility to platform analytics
+
+**Required Before v0.5**:
+- Implement DOM mutation functions
+- Test against platform JS frameworks (React, etc.)
+- Ensure mutations are atomic
+- Debounce/throttle to avoid loops
+
+**Example Mutation**:
+[source,javascript]
+----
+// Reorder feed items
+function reorderFeed(newOrder) {
+  const container = document.querySelector('#feed-container')
+  const items = Array.from(container.children)
+
+  newOrder.forEach((index, newPos) => {
+    container.appendChild(items[index]) // DOM moves element
+  })
+}
+----
+
+**Complexity**: MEDIUM (DOM APIs are stable, but platform JS can interfere)
+
+---
+
+=== Seam 6: Actuator Actions ↔ Platform Detection
+
+**Interface**: Automated clicks, scrolls, tab opens
+
+**Current State**:
+- Actuator has rate limiting logic
+- No actual DOM interaction
+
+**Risks**:
+- Platforms detect automated behavior (bot detection)
+- CAPTCHAs triggered
+- Account warnings/bans
+- Ethical concerns (is this "hacking"?)
+
+**Required Before v0.5**:
+- Implement realistic timing (human-like delays)
+- Randomize click coordinates
+- Respect robots.txt and ToS
+- Add kill switch
+
+**Detection Vectors**:
+- Perfect timing (too regular)
+- Inhuman speed
+- Geometric click patterns
+- Missing mouse movement
+- No scroll inertia
+
+**Mitigation**:
+[source,javascript]
+----
+// Human-like click with jitter
+async function humanClick(element) {
+  const rect = element.getBoundingClientRect()
+  const x = rect.left + rect.width * (0.3 + Math.random() * 0.4)  // Jitter
+  const y = rect.top + rect.height * (0.3 + Math.random() * 0.4)
+
+  await sleep(100 + Math.random() * 200)  // Variable delay
+  element.click()
+}
+----
+
+**Complexity**: HIGH (adversarial environment, ethical implications)
+
+---
+
+=== Seam 7: Activity Log ↔ User Narrative
+
+**Interface**: Action logging → human-readable explanations
+
+**Current State**:
+- ActionLog type defined
+- No UI for display
+- No narrative generation beyond basic strings
+
+**Risks**:
+- Users don't trust opaque systems
+- Log spam (too verbose)
+- Missing context
+
+**Required Before v1.0**:
+- Build activity log UI
+- Implement narrative templates
+- Group related actions
+- Add "why" explanations
+
+**Narrative Template**:
+[source]
+----
+Action: InjectNoise { count: 2 }
+Time: 14:32:15
+Platform: YouTube
+
+Narrative:
+"Clicked 2 off-topic videos to dilute your profile.
+This makes it harder for YouTube to confidently classify you
+as a 'Tech/AI' viewer, increasing feed diversity."
+
+Reversible: No (clicks are logged by YouTube)
+----
+
+**Complexity**: LOW-MEDIUM (mostly UX design)
+
+---
+
+=== Seam 8: Persona Behavior ↔ Rule Engine
+
+**Interface**: Persona traits → Rule probabilities → Actions
+
+**Current State**:
+- Personas defined with traits
+- Rules have probability fields
+- No integration between them
+
+**Risks**:
+- Personas feel arbitrary (no clear behavioral difference)
+- Rules ignore persona context
+- Behavioral drift (persona not reinforced)
+
+**Required Before v1.0**:
+- Pass active persona to rule engine context
+- Adjust rule probabilities based on persona
+- Validate persona alignment
+
+**Integration Example**:
+[source,rust]
+----
+// In Rust rule evaluation
+pub fn evaluate(&self, context: &Context) -> Option<Vec<Action>> {
+    let mut probability = self.probability;
+
+    // Adjust based on active persona
+    if let Some(persona) = &context.active_persona {
+        if persona.name == "Gardener" && self.id == "tech-avoidance" {
+            probability *= 1.5; // Gardener avoids tech more
+        }
+    }
+
+    if rand::random::<f64>() > probability {
+        return None;
+    }
+    // ...
+}
+----
+
+**Complexity**: MEDIUM (needs careful probability tuning)
+
+---
+
+=== Seam 9: Extension Updates ↔ User Data Migration
+
+**Interface**: Schema versioning, data migration
+
+**Current State**:
+- No versioning strategy
+- No migration plan
+
+**Risks**:
+- Breaking changes lose user data
+- State corruption
+- User frustration
+
+**Required Before v1.0**:
+- Version state schema
+- Write migration functions
+- Test upgrade paths
+
+**Migration Strategy**:
+[source,javascript]
+----
+async function migrateState(oldVersion, newVersion) {
+  const state = await chrome.storage.local.get('shieldState')
+
+  if (oldVersion < 2 && newVersion >= 2) {
+    // v0.1 → v0.5: Add persona field
+    state.activePersona = null
+  }
+
+  if (oldVersion < 5 && newVersion >= 5) {
+    // v0.5 → v1.0: Restructure lens config
+    state.lensConfig = migrateToNewFormat(state.lensConfig)
+  }
+
+  await chrome.storage.local.set({ shieldState: state })
+}
+----
+
+**Complexity**: LOW (but critical for user trust)
+
+---
+
+=== Seam 10: Cross-Platform Abstraction
+
+**Interface**: Unified feed model across platforms
+
+**Current State**:
+- Observer defines `ContentSignal` type
+- No platform implementations
+
+**Risks**:
+- Platforms have fundamentally different structures
+- Unified model might be too abstract (loses platform features)
+- Or too specific (leaks platform details)
+
+**Required Before v1.0**:
+- Validate ContentSignal works for YouTube, X, Instagram
+- Add platform-specific extensions if needed
+
+**Abstraction Tension**:
+[source]
+----
+Too Abstract:
+  ContentSignal { url, text, categories }
+  ❌ Loses: YouTube chapters, X threads, Instagram carousel
+
+Too Specific:
+  YouTubeSignal { video_id, chapters, ... }
+  XSignal { tweet_id, thread_position, ... }
+  ❌ Can't write cross-platform lenses
+
+Goldilocks:
+  ContentSignal {
+    url, text, categories,
+    platform_data: PlatformData  // Tagged union
+  }
+  ✅ Common interface + platform extensions
+----
+
+**Complexity**: MEDIUM-HIGH (fundamental architecture decision)
+
+---
+
+== Seam Risk Summary
+
+[cols="1,1,3,1"]
+|===
+|Seam |Risk |Primary Concern |Mitigation Priority
+
+|1. ReScript ↔ Browser APIs |MEDIUM |Type safety gap |v0.5
+|2. ReScript ↔ WASM |HIGH |Integration complexity |v0.5
+|3. Content ↔ DOM |**CRITICAL** |Platform changes break everything |v0.5
+|4. Popup ↔ State |MEDIUM |State drift |v0.5
+|5. Lens ↔ Rendering |MEDIUM |Performance, loops |v0.5
+|6. Actuator ↔ Detection |**CRITICAL** |Bot detection, ethics |v0.5
+|7. Log ↔ Narrative |LOW |Trust, UX |v1.0
+|8. Persona ↔ Rules |MEDIUM |Behavioral coherence |v1.0
+|9. Updates ↔ Migration |MEDIUM |Data loss |v1.0
+|10. Cross-Platform |HIGH |Abstraction design |v1.0
+|===
+
+**Critical Path**: Seams 2, 3, 6 must work for v0.5
+
+== Version Roadmap
+
+=== v0.5.0 - First Working Prototype (Target: 2026-03-15)
+
+**Goal**: Load extension, observe one platform, apply one lens
+
+**Completion Criteria**:
+- [x] Extension loads in Chrome without errors
+- [ ] YouTube feed observer extracts signals
+- [ ] Random Walk lens generates off-distribution URLs
+- [ ] Membrane breach opens 3-5 tabs
+- [ ] Activity log records actions
+- [ ] Popup displays current state
+
+**Seams to Close**:
+1. ✅ ReScript compiles
+2. ✅ Rust → WASM builds
+3. ✅ WASM integrates with extension
+4. ✅ YouTube DOM adapter works
+5. ✅ Basic state sync popup ↔ background
+
+**Features**:
+- Single platform: YouTube
+- Single lens: Random Walk
+- No personas yet
+- Manual activation only (no automated rules)
+
+**Dependencies**:
+- ReScript compiler working
+- wasm-pack installed
+- Chrome for testing
+- YouTube account (optional)
+
+**Known Limitations**:
+- YouTube DOM changes will break it
+- No stealth (easily detectable)
+- No narrative explanations
+- No undo
+
+**Success Metrics**:
+- Can load extension
+- Can observe feed diversity
+- Can trigger breach
+- Can see activity log
+
+**Risks**:
+- YouTube DOM proves too dynamic
+- WASM too large (>500KB)
+- Bot detection triggered
+
+---
+
+=== v1.0.0 - Production MVP (Target: 2026-06-01)
+
+**Goal**: Multi-platform, all lenses, personas, polished UX
+
+**Completion Criteria**:
+- [ ] 3+ platforms supported (YouTube, X, Instagram)
+- [ ] All 5 lenses implemented
+- [ ] 3+ personas with distinct behaviors
+- [ ] Rule engine evaluates context
+- [ ] Activity log UI with narratives
+- [ ] Bubble map visualization
+- [ ] Settings panel
+- [ ] Data export/import
+
+**Seams to Close**:
+1. ✅ All v0.5 seams
+2. ✅ Cross-platform abstraction stable
+3. ✅ Persona ↔ rule integration
+4. ✅ State migration strategy
+5. ✅ Activity log narrative generation
+
+**Features**:
+- **Platforms**: YouTube, X (Twitter), Instagram
+- **Lenses**: Opposition, Random Walk, Time-Shift, Locality, Serendipity
+- **Personas**: Gardener, Tech Skeptic, Art Student + custom personas
+- **Rules**: Noise injection, profile dilution, engagement disruption
+- **UI**: Full control panel, bubble map, activity log
+- **Stealth**: Basic timing randomization
+
+**New Capabilities**:
+- Platform auto-detection
+- Lens composition (combine multiple lenses)
+- Persona scheduler (auto-rotate)
+- Rule customization (edit probabilities)
+- Activity undo (where possible)
+
+**Quality Gates**:
+- 90% ReScript type coverage
+- Rust tests pass
+- Manual testing on all 3 platforms
+- Security audit (self-review)
+- AGPL-3.0 compliance verified
+
+**Success Metrics**:
+- <5 user-reported bugs/month
+- Works on latest Chrome/Firefox
+- <10% performance overhead
+- Activity log trusted by users
+
+**Risks**:
+- Multi-platform maintenance burden
+- Chrome extension policy changes
+- Platform ToS violations
+
+---
+
+=== v2.0.0 - Distributed Personas (Target: 2026-12-01)
+
+**Goal**: Personas can sync across devices, distributed identity
+
+**New Features**:
+- Persona export/import (encrypted)
+- Sync personas via user-controlled server (not Chrome sync)
+- Persona marketplace (share/discover personas)
+- Behavioral analytics (track persona effectiveness)
+
+**Seams to Add**:
+- Extension ↔ sync server (optional, user-hosted)
+- Persona encryption (use Januskey if available)
+- Cross-device state reconciliation
+
+**Integration Opportunities**:
+- **Januskey**: Cryptographically signed personas
+- **Ubicity**: Compute-to-resist-profiling credits
+- **Bunsenite**: Nickel-based rule configs
+
+---
+
+=== v5.0.0 - Federated Bubble Map (Target: 2027-06-01)
+
+**Goal**: Crowdsourced bubble map, see aggregate filter bubble topology
+
+**New Features**:
+- Anonymized bubble map data sharing (opt-in)
+- See how your bubble compares to aggregate
+- Discover rare/emerging clusters
+- Community lens library
+
+**Seams to Add**:
+- Extension ↔ federated aggregation server
+- Differential privacy for shared data
+- P2P sync (libp2p or similar)
+
+**Privacy Considerations**:
+- Zero-knowledge proofs for aggregate stats
+- No individual tracking
+- Local-first, optional federation
+
+---
+
+=== v10.0.0 - Ecosystem Standard (Target: 2028-01-01)
+
+**Goal**: Algorithm Shield becomes a *protocol*, not just an extension
+
+**Vision**:
+- Browser-native support (proposed W3C standard)
+- Other extensions can plug into Shield API
+- Platforms adopt "Shield-friendly" modes
+- Open protocol for counter-algorithms
+
+**Architectural Transformation**:
+
+[source]
+----
+v1.0 Architecture:
+  Extension → Platform
+
+v10.0 Architecture:
+  Platform ←→ Shield Protocol ←→ Extension Ecosystem
+              ↑
+              ├─ Algorithm Shield (reference impl)
+              ├─ Third-party extensions
+              └─ Browser-native shield
+----
+
+**New Seams**:
+- Shield Protocol specification (JSON-RPC or similar)
+- Platform cooperation API (opt-in for platforms)
+- Extension marketplace for Shield-compatible tools
+
+**Ecosystem Integrations**:
+- **Supernorma**: Model bubble trajectories, predict outcomes
+- **Bunsenite**: Type-checked rule configs standard
+- **Polyglot-i18n**: Multi-language support standard
+- **Neural Foundations**: ML-based bubble detection
+
+**Standards Track**:
+1. Write spec: "Counter-Algorithm Protocol v1.0"
+2. Reference implementation: Algorithm Shield
+3. Community review
+4. W3C submission (if mature)
+
+**Success Metrics**:
+- 3+ compatible extensions exist
+- 1+ browser vendor expresses interest
+- 1+ platform adopts cooperation API
+
+---
+
+== Critical Path Summary
+
+[source]
+----
+v0.1 (NOW)
+  ↓ [Close seams 2,3,6 - compile, DOM, WASM]
+v0.5 (Mar 2026) - First prototype
+  ↓ [Close seams 7,8,9,10 - UX, personas, migration, abstraction]
+v1.0 (Jun 2026) - Production MVP
+  ↓ [Add distributed identity]
+v2.0 (Dec 2026) - Distributed personas
+  ↓ [Add federated data]
+v5.0 (Jun 2027) - Federated bubble map
+  ↓ [Protocol specification]
+v10.0 (Jan 2028) - Ecosystem standard
+----
+
+**Next Immediate Actions** (v0.1 → v0.5):
+
+1. **Week 1**: Close seam 2 (WASM builds, loads, responds)
+2. **Week 2**: Close seam 3 (YouTube adapter extracts signals)
+3. **Week 3**: Close seam 6 (Breach opens tabs with human timing)
+4. **Week 4**: Close seam 4 (State sync works popup ↔ background)
+5. **Week 5-8**: Polish, test, iterate
+
+**Long-Term Bets**:
+
+- **v2.0**: Personas become portable identity
+- **v5.0**: Bubble map becomes social/collective tool
+- **v10.0**: Counter-algorithms become standard browser feature
+
+**Open Questions**:
+
+1. Will platforms tolerate this? (Legal/ToS risk)
+2. Can we avoid bot detection indefinitely? (Arms race)
+3. Will users actually want behavioral polymorphism? (UX research needed)
+4. Is this ethical? (Philosophical question, ongoing)
+
+---
+
+== Evolutionary Pressure Points
+
+As Algorithm Shield evolves, these pressures will shape design:
+
+=== Technical Pressures
+
+- **Platform evolution**: DOM changes force adapter updates
+- **Performance**: WASM size, DOM mutation overhead
+- **Security**: Chrome extension policy, CSP restrictions
+
+=== Social Pressures
+
+- **User demand**: Which lenses/personas do users actually use?
+- **Platform resistance**: ToS updates, bot detection
+- **Regulatory**: Privacy laws, anti-manipulation rules
+
+=== Economic Pressures
+
+- **Funding**: Who pays for development? (FOSS, donations, grants?)
+- **Hosting**: If federated, who hosts aggregation servers?
+- **Support**: Who maintains platform adapters?
+
+=== Philosophical Pressures
+
+- **Ethics**: Is automated manipulation ethical? (Even if beneficial)
+- **Power**: Does this empower users or just create new asymmetry?
+- **Scale**: What happens if everyone uses Algorithm Shield?
+
+---
+
+== Governance Integration
+
+All versions should maintain full 6SCM:
+
+[cols="1,3"]
+|===
+|SCM File |Evolutionary Role
+
+|STATE.scm |Updated each version with new roadmap
+|META.scm |New ADRs for major architectural decisions
+|ECOSYSTEM.scm |Track integrations, relationships to other projects
+|NEUROSYM.scm |(v2.0+) If ML-based bubble detection added
+|PLAYBOOK.scm |(v1.0+) Operational procedures, deployment
+|AGENTIC.scm |(v1.0+) Rules for autonomous agent behavior
+|===
+
+**Checkpoint Protocol**:
+- Each version bump updates STATE.scm roadmap
+- Major architectural changes add META.scm ADRs
+- New integrations update ECOSYSTEM.scm
+- Monthly review of all 6 files
+
+---
+
+== Conclusion
+
+**Current Position**: Scaffolding complete, no working code yet.
+
+**Critical Path to v0.5**: Close seams 2, 3, 6 (WASM, DOM, detection).
+
+**Path to v1.0**: Multi-platform, full feature set, polished UX.
+
+**Long-Term Vision**: Ecosystem standard, browser-native support.
+
+**Biggest Risks**:
+1. Platform resistance (ToS, bot detection)
+2. Maintenance burden (DOM adapters break constantly)
+3. User adoption (will people actually use this?)
+
+**Biggest Opportunities**:
+1. Fill real need (filter bubbles are widely recognized problem)
+2. Open protocol (become standard for counter-algorithms)
+3. Ecosystem integration (leverage hyperpolymath stack)
+
+**Next Session**: Start closing seam 2 (build and integrate WASM).

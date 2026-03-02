@@ -1,0 +1,197 @@
+image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
+image:https://img.shields.io/badge/Philosophy-Palimpsest-indigo.svg[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-license"]
+
+
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-FileCopyrightText: 2024 Hyperpolymath
+
+= NSAI Disinfo Detector
+
+:toc: macro
+:toc-title: Contents
+:toclevels: 3
+:sectnums:
+:icons: font
+
+*Neuro-Symbolic AI System for Disinformation Detection*
+
+A hybrid AI architecture combining neural network inference with symbolic logic reasoning to detect false or misleading information with explainable verdicts.
+
+toc::[]
+
+== Overview
+
+The NSAI Disinfo Detector implements a *neuro-symbolic pipeline* that processes content through two complementary reasoning systems:
+
+1. **Neural Component** (ONNX Runtime) - Extracts probabilistic features: fakeness scores, emotional manipulation indicators, visual artifact detection
+2. **Symbolic Component** (Souffle Datalog) - Applies logical rules against a knowledge graph to produce human-interpretable verdicts
+
+This dual approach provides both the pattern recognition power of neural networks and the explainability of symbolic reasoning.
+
+== Architecture
+
+[source]
+----
+                    ┌─────────────────────────────────────────────────────────┐
+                    │                    NSAI Pipeline                        │
+                    │                                                         │
+  ┌─────────┐       │   ┌──────────┐     ┌──────────┐     ┌──────────┐       │   ┌─────────┐
+  │  NATS   │──────▶│   │  ONNX    │────▶│  Dgraph  │────▶│ Souffle  │───────│──▶│ Verdict │
+  │JetStream│       │   │ Inference│     │  Facts   │     │ Datalog  │       │   │+ Reason │
+  └─────────┘       │   └──────────┘     └──────────┘     └──────────┘       │   └─────────┘
+                    │                                                         │
+                    │   Neural Features    Knowledge       Symbolic Rules     │
+                    │   - fakeness_score   Graph Query     + Neural Input     │
+                    │   - emotion_score                    = Explainable      │
+                    │   - visual_artifact                    Verdict          │
+                    └─────────────────────────────────────────────────────────┘
+----
+
+=== Components
+
+[cols="1,3,1"]
+|===
+|Component |Purpose |Status
+
+|**Go Orchestrator**
+|Main service: consumes NATS messages, orchestrates neural/symbolic pipeline
+|Implemented
+
+|**ONNX Wrapper**
+|Runs quantized neural models for feature extraction
+|Stub
+
+|**Souffle Wrapper**
+|Executes Datalog rules combining neural features + graph facts
+|Stub
+
+|**Dgraph Integration**
+|Knowledge graph storing source reputation, entity relationships
+|Interface only
+
+|**Prometheus Metrics**
+|Observability: message counts, errors, processing latency
+|Implemented
+
+|**Protocol Buffers**
+|Message serialization schema (`AnalysisInput`, `NeuralFeatures`)
+|Defined
+|===
+
+== Data Schema
+
+=== AnalysisInput (Protobuf)
+
+[source,protobuf]
+----
+message AnalysisInput {
+    string content_hash = 1;   // SHA-256 of content
+    string content_text = 2;   // Raw text to analyze
+    string source_id = 3;      // Source identifier for graph lookup
+    string image_url = 4;      // Optional image for visual analysis
+}
+----
+
+=== NeuralFeatures (Output)
+
+[source,protobuf]
+----
+message NeuralFeatures {
+    float fakeness_score = 1;    // 0.0 (authentic) to 1.0 (fake)
+    float emotion_score = 2;     // Emotional manipulation index
+    bool visual_artifact = 3;    // AI-generated image indicators
+}
+----
+
+== Infrastructure
+
+=== Container Stack
+
+[source,yaml]
+----
+Services:
+  - nats:      Message broker (JetStream enabled)
+  - dgraph:    Knowledge graph (Zero + Alpha)
+  - detector:  Main NSAI service
+
+Security:
+  - Rootless Podman
+  - no-new-privileges
+  - All capabilities dropped
+  - Read-only root filesystem
+----
+
+=== Deployment Options
+
+* **Podman Compose** - Local/edge deployment (`podman-compose.yaml`)
+* **Kubernetes/Helm** - Cloud deployment (`ci/helm/detector/`)
+* **SaltStack** - Configuration management (`ci/salt/detector.sls`)
+
+== Metrics
+
+Prometheus metrics exposed on `:9090/metrics`:
+
+|===
+|Metric |Type |Description
+
+|`nsai_messages_processed_total`
+|Counter
+|Total messages processed
+
+|`nsai_errors_total`
+|Counter
+|Total errors encountered
+
+|`nsai_processing_latency_seconds`
+|Histogram
+|End-to-end processing time
+|===
+
+== Project Status
+
+[IMPORTANT]
+====
+This project is in **proof-of-concept stage**. The orchestration architecture is complete, but core implementations are stubs awaiting:
+
+* Neural model training and ONNX export
+* Datalog rule authoring
+* Dgraph schema and seeding
+* Rust conversion (per RSR policy)
+====
+
+See link:ROADMAP.adoc[ROADMAP.adoc] for development plan.
+
+== Building
+
+=== Prerequisites
+
+* Go 1.21+ (current) or Rust toolchain (target)
+* Podman or Docker
+* Protocol Buffers compiler (`protoc`)
+
+=== Build Commands
+
+[source,bash]
+----
+# Build container image
+podman build -t nsai-detector:latest .
+
+# Run with compose
+podman-compose up -d
+
+# Generate protobuf (Go)
+protoc --go_out=. pkg/model_pb/analysis.proto
+----
+
+== License
+
+This project is licensed under **PMPL-1.0-or-later**.
+
+See link:docs/CITATIONS.adoc[CITATIONS.adoc] for citation formats.
+
+== References
+
+* https://souffle-lang.github.io/[Souffle Datalog]
+* https://onnxruntime.ai/[ONNX Runtime]
+* https://dgraph.io/[Dgraph]
+* https://nats.io/[NATS JetStream]

@@ -1,0 +1,202 @@
+= Contributing to Algorithm Shield
+:toc:
+:toc-placement!:
+
+[.lead]
+Guidelines for contributing to Algorithm Shield.
+
+toc::[]
+
+== Development Setup
+
+=== Prerequisites
+
+Install the required tools:
+
+[source,bash]
+----
+# ReScript compiler (global install)
+npm install -g rescript
+
+# Rust toolchain with WASM target
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup target add wasm32-unknown-unknown
+
+# wasm-pack (Rust → WASM build tool)
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+# Deno (should already be installed per RSR)
+curl -fsSL https://deno.land/install.sh | sh
+----
+
+=== Clone and Build
+
+[source,bash]
+----
+# Clone to canonical location (per RSR)
+cd ~/Documents/hyperpolymath-repos
+git clone git@github.com:hyperpolymath/algorithm-shield.git
+cd algorithm-shield
+
+# Build the extension
+deno task build
+
+# Or run in development mode (watches ReScript files)
+deno task dev
+----
+
+=== Load in Chrome
+
+1. Open `chrome://extensions`
+2. Enable "Developer mode" (top-right)
+3. Click "Load unpacked"
+4. Select `algorithm-shield/dist/` directory
+
+== Project Structure
+
+[source]
+----
+algorithm-shield/
+├── src/
+│   ├── rescript/           # Core logic (type-safe)
+│   │   ├── membrane/       # State orchestrator
+│   │   ├── observer/       # Feed analysis
+│   │   ├── actuator/       # Controlled interactions
+│   │   ├── lens/           # Feed transformations
+│   │   └── persona/        # Behavioral shells
+│   ├── rust/               # Rule engine (compiles to WASM)
+│   │   └── minikaren/      # Logic programming core
+│   ├── ui/                 # Popup and control panel
+│   └── platforms/          # Platform-specific adapters
+├── public/                 # HTML/CSS/assets
+├── scripts/                # Build tooling (Deno)
+├── STATE.scm               # Current project state
+├── META.scm                # Architecture decisions
+└── ECOSYSTEM.scm           # Ecosystem position
+----
+
+== Code Style
+
+=== ReScript
+
+* Follow official https://rescript-lang.org/docs/manual/latest/overview[ReScript style guide]
+* Use 2-space indentation
+* Prefer pattern matching over if/else
+* Use descriptive variable names (per CLAUDE.md)
+* Annotate complex types
+
+=== Rust
+
+* Run `cargo fmt` before committing
+* Use `cargo clippy` to catch common issues
+* Add doc comments for public APIs
+* Prefer explicit types for complex closures
+
+=== JavaScript Glue
+
+* Minimal JS - only for browser APIs not yet bound in ReScript
+* Follow Deno lint rules
+* Add comments explaining why JS is necessary
+
+== Testing
+
+=== ReScript Tests
+
+[source,bash]
+----
+# Run ReScript tests (when implemented)
+npx rescript build -with-deps
+----
+
+=== Rust Tests
+
+[source,bash]
+----
+cd src/rust
+cargo test
+----
+
+=== Manual Extension Testing
+
+1. Build: `deno task build`
+2. Reload extension in Chrome
+3. Test on target platform (YouTube, X, etc.)
+4. Check browser console for errors
+5. Verify activity log
+
+== Commit Guidelines
+
+* Use conventional commits format: `type(scope): message`
+* Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
+* Reference issues: `fixes #123`
+* Keep commits atomic (one logical change per commit)
+
+Examples:
+
+[source]
+----
+feat(lens): implement Opposition lens transformation
+fix(actuator): rate limiter off-by-one error
+docs(readme): add installation troubleshooting
+refactor(observer): extract platform detection
+----
+
+== Adding a New Platform
+
+To add support for a new platform (e.g., Instagram):
+
+1. Create `src/platforms/instagram/`
+2. Implement the platform adapter interface:
+
+[source,rescript]
+----
+// src/platforms/instagram/InstagramAdapter.res
+let detectPlatform = (url: string): bool => {
+  url->String.includes("instagram.com")
+}
+
+let extractSignals = (document: Dom.document): array<Observer.ContentSignal.t> => {
+  // Platform-specific DOM scraping
+  []
+}
+----
+
+3. Register in platform registry
+4. Test on live Instagram feed
+5. Document DOM selectors and quirks
+
+== Adding a New Lens
+
+To add a new lens:
+
+1. Add variant to `Membrane.State.lensType`
+2. Implement `applyXLens` in `Lens.res`
+3. Add lens card to `popup.html`
+4. Test transformation logic
+5. Document lens behavior in README
+
+== Adding a New Persona
+
+To add a new persona:
+
+1. Define in `Persona.PersonaDefinition`
+2. Specify behavioral traits (interests, avoidances, click probability)
+3. Add persona card to `popup.html`
+4. Test behavioral alignment
+5. Document persona in README
+
+== Pull Request Process
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feat/my-feature`
+3. Make changes and test thoroughly
+4. Update STATE.scm if significant progress
+5. Update documentation if adding features
+6. Submit PR with clear description
+7. Reference related issues
+
+== License
+
+All contributions are licensed under AGPL-3.0-or-later.
+
+By contributing, you agree that your contributions will be licensed under the same terms.

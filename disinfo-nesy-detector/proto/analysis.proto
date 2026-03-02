@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2024 Hyperpolymath
+
+syntax = "proto3";
+
+/**
+ * Disinfo Detector — Protobuf Schema Specification.
+ *
+ * This file is the authoritative definition of the data messages used 
+ * within the NSAI (Neuro-Symbolic AI) pipeline. It ensures that 
+ * components implemented in different languages (Rust, Python, Go) 
+ * can communicate with bit-perfect consistency.
+ */
+
+package model_pb;
+
+/**
+ * INGEST MESSAGE: The raw data package received from the ingestion gate.
+ */
+message AnalysisInput {
+    string content_hash = 1; // SHA-256 unique identifier.
+    string content_text = 2; // The natural language text to analyze.
+    string source_id    = 3; // The authoritative ID of the content creator.
+    string image_url    = 4; // Reference to visual evidence.
+}
+
+/**
+ * FEATURE MESSAGE: Structured output from the neural inference stage.
+ */
+message NeuralFeatures {
+    float fakeness_score  = 1; // Probability of disinformation (0.0 to 1.0).
+    float emotion_score   = 2; // Confidence in detected emotional manipulation.
+    bool  visual_artifact = 3; // True if AI-generated signatures are detected.
+}
