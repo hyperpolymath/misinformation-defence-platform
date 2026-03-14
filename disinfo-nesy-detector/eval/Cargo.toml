@@ -5,7 +5,7 @@
 name = "disinfo-eval"
 version = "0.1.0"
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "PMPL-1.0-or-later"
 description = "Evaluation pipeline for Neuro-Symbolic Disinformation Detector"
 
 [dependencies]

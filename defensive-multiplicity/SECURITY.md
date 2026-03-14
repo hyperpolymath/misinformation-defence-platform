@@ -69,4 +69,4 @@ We maintain a list of security researchers who have responsibly disclosed vulner
 ## Contact
 
 - Security Team: `security@hyperpolymath.org`
-- Maintainer: `jonathan.jewell@open.ac.uk`
+- Maintainer: `j.d.a.jewell@open.ac.uk`

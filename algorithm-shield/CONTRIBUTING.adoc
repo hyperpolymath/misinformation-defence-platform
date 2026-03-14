@@ -197,6 +197,6 @@ To add a new persona:
 
 == License
 
-All contributions are licensed under AGPL-3.0-or-later.
+All contributions are licensed under PMPL-1.0-or-later.
 
 By contributing, you agree that your contributions will be licensed under the same terms.
