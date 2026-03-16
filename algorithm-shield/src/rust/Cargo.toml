@@ -2,7 +2,7 @@
 name = "algorithm-shield-engine"
 version = "0.1.0"
 edition = "2021"
-authors = ["hyperpolymath"]
+authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 license = "PMPL-1.0-or-later"
 description = "Rule engine and logic programming core for Algorithm Shield"
 
