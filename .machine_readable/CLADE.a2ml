@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Clade declaration — part of the gv-clade-index registry
+# See: https://github.com/hyperpolymath/gv-clade-index
+
+[identity]
+uuid = "81c73b9a-7138-56f6-8dc3-c94aff4fe330"
+primary-forge = "github"
+primary-owner = "hyperpolymath"
+canonical-name = "misinformation-defence-platform"
+prefixed-name = "ap-misinformation-defence-platform"
+
+[clade]
+primary = "ap"
+secondary = ["sc"]
+assigned = "2026-03-16"
+rationale = ""
+
+[forges]
+github = "hyperpolymath/misinformation-defence-platform"
+gitlab = "hyperpolymath/misinformation-defence-platform"
+bitbucket = "hyperpolymath/misinformation-defence-platform"
+
+[lineage]
+type = "standalone"
+parent = "Counter-misinformation platform"
+born = "2026-03-16"
