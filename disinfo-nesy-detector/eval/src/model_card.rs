@@ -82,7 +82,7 @@ impl Default for ModelDetails {
             description: String::new(),
             developers: Vec::new(),
             organization: String::new(),
-            license: "AGPL-3.0-or-later".to_string(),
+            license: "PMPL-1.0-or-later".to_string(),
             date: Utc::now(),
             citation: None,
             contact: None,

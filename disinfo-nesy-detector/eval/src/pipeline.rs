@@ -296,7 +296,7 @@ impl EvaluationPipeline {
             result.model_description
         ))
         .organization("Hyperpolymath")
-        .license("AGPL-3.0-or-later")
+        .license("PMPL-1.0-or-later")
         .framework("Rust")
         .metrics(&result.metrics)
         .training_datasets(vec![dataset_info.name.clone()])
