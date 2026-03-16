@@ -17,6 +17,7 @@
 //! TRANSPORT: Integrates with NATS JetStream for reliable, asynchronous job 
 //! processing. Provides real-time metrics via Prometheus.
 
+#![forbid(unsafe_code)]
 mod onnx_wrapper;
 mod souffle_wrapper;
 mod model_pb;

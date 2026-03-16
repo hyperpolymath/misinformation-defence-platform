@@ -11,6 +11,7 @@
 //! - Model cards for ML transparency
 //! - Reproducible evaluation pipeline with seeded randomness
 
+#![forbid(unsafe_code)]
 pub mod baselines;
 pub mod datasets;
 pub mod explainability;

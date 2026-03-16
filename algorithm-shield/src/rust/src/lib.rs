@@ -9,6 +9,7 @@
 //       - Zig FFI layer ready: /var/mnt/eclipse/repos/proven/ffi/zig
 //       - See: docs/PROVEN-EPHAPAX-INTEGRATION.adoc
 
+#![forbid(unsafe_code)]
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 
