@@ -306,8 +306,8 @@ Qed.
 
 == References
 
-- absolute-zero repo: `/var/mnt/eclipse/repos/absolute-zero`
-- maa-framework repo: `/var/mnt/eclipse/repos/maa-framework`
+- absolute-zero repo: `/var$REPOS_DIR/absolute-zero`
+- maa-framework repo: `/var$REPOS_DIR/maa-framework`
 - Algorithm Shield SEAM-6: `docs/SEAM-ANALYSIS.adoc`
 - Bot detection evasion: `docs/DEFENSE-LAYERS.adoc`
 - CNO theory paper: `absolute-zero/papers/.latex/`

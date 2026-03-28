@@ -5,8 +5,8 @@
 //
 // v1.0: Uses serde_json (WASM-compatible)
 // v2.0: Will use proven library via Ephapax hot paths (Idris2-verified, Zig FFI)
-//       - Ephapax bindings ready: /var/mnt/eclipse/repos/proven/bindings/ephapax
-//       - Zig FFI layer ready: /var/mnt/eclipse/repos/proven/ffi/zig
+//       - Ephapax bindings ready: /var$REPOS_DIR/proven/bindings/ephapax
+//       - Zig FFI layer ready: /var$REPOS_DIR/proven/ffi/zig
 //       - See: docs/PROVEN-EPHAPAX-INTEGRATION.adoc
 
 #![forbid(unsafe_code)]

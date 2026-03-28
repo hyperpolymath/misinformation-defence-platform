@@ -17,7 +17,7 @@ serde-wasm-bindgen = "0.6"
 rand = "0.8"
 getrandom = { version = "0.2", features = ["js"] }
 # v2.0: Will integrate proven via Ephapax hot paths (Ephapax→WASM + proven via Zig FFI)
-# Ephapax bindings ready at: /var/mnt/eclipse/repos/proven/bindings/ephapax
+# Ephapax bindings ready at: /var$REPOS_DIR/proven/bindings/ephapax
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
