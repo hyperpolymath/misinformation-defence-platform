@@ -8,6 +8,6 @@
   },
   "imports": {
     "rescript": "^12.0.0",
-    "@rescript/core": "npm:@rescript/core@1.8.0"
+    "@rescript/core": "npm:@rescript/core@^1.6.1"
   }
 }
