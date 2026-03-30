@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-all
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-run --allow-net
 
 // Build script for Algorithm Shield
 

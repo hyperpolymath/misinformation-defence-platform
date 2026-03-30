@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-all
+#!/usr/bin/env -S deno run --allow-run --allow-read --allow-env
 
 // Development server for Algorithm Shield
 
