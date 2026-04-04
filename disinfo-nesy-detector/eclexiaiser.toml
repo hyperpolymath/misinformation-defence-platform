@@ -5,15 +5,16 @@
 name = "disinfo-nesy-detector"
 
 [[functions]]
-name = "process_batch"
-source = "src/batch.rs"
-energy-budget-mj = 50.0
-carbon-budget-mg = 10.0
+name = "run_inference"
+source = "src/onnx_wrapper.rs"
+energy-budget-mj = 120.0
+carbon-budget-mg = 24.0
 
 [[functions]]
-name = "render_page"
-source = "src/web.rs"
-energy-budget-mj = 5.0
+name = "process_message"
+source = "src/main.rs"
+energy-budget-mj = 50.0
+carbon-budget-mg = 10.0
 
 [carbon]
 provider = "static"
