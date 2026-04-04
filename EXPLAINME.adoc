@@ -1,24 +1,287 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = Misinformation Defence Platform — Show Me The Receipts
 :toc:
+:toclevels: 3
 :icons: font
 
-The README makes claims. This file backs them up.
+The README describes a platform for combating misinformation through detection,
+analysis, and response tooling, currently in specification phase at the
+top-level repo but with substantive implementations in three subdirectories.
+This file traces those subdirectories' architectures, the critical code paths,
+and how each component is checked.
+
+== Platform Structure
+
+The top-level repo is an umbrella. The active implementation work lives in
+three subdirectories, each a self-contained project with its own CI, source,
+and ABI/FFI stack:
+
+[cols="1,3,1", options="header"]
+|===
+| Subdirectory | What it does | Implementation state
+
+| `disinfo-nesy-detector/`
+| Neuro-symbolic AI pipeline: ONNX neural inference + Souffle Datalog symbolic
+  reasoning → explainable disinformation verdicts
+| Rust core implemented; ONNX and Souffle wrappers stubbed
+
+| `algorithm-shield/`
+| Browser extension that confuses algorithmic filter bubbles by injecting
+  behavioural unpredictability into browsing patterns
+| ReScript frontend + Rust formal verification; Idris2 proofs in progress
+
+| `defensive-multiplicity/`
+| Multi-source response orchestration and counter-narrative coordination
+| Scaffolded (Justfile, ABI/FFI structure, RSR standard files)
+|===
+
+== Claims from the README
 
 [quote, README]
 ____
-A platform for combating misinformation through detection, analysis, and response tooling.
+A platform for combating misinformation through detection, analysis, and
+response tooling.
 ____
+
+*How it works.* The detection path runs in `disinfo-nesy-detector/`. The
+component receives an `AnalysisInput` protobuf message from NATS JetStream
+(fields: `content_hash` SHA-256, `content_text`, `source_id`, `image_url`),
+passes it through an ONNX wrapper (`src/onnx_wrapper.rs`) that returns a
+`NeuralFeatures` proto (`fakeness_score` 0.0–1.0, `emotion_score`,
+`visual_artifact` bool), queries a Dgraph knowledge graph for source reputation
+and entity relationships, then feeds both neural features and graph facts into
+a Souffle Datalog wrapper (`src/souffle_wrapper.rs`) that applies symbolic
+rules to produce a human-interpretable verdict with a stated reason chain.
+
+The orchestration entry point is `src/main.rs`, which subscribes to NATS
+JetStream, owns the async Tokio runtime, and dispatches to the neural and
+symbolic subsystems. Prometheus metrics (message counts, error rates, processing
+latency) are exposed at a configurable scrape endpoint.
+
+*Honest caveat.* The ONNX wrapper and Souffle wrapper are stubs as of the
+current codebase — `src/onnx_wrapper.rs` and `src/souffle_wrapper.rs` compile
+but do not yet call real models. The Dgraph integration is interface-only.
+The README's "Implemented" tags for NATS orchestration and Prometheus metrics
+are accurate; the other three components are explicitly marked "Stub" or
+"Interface only" in the component table.
+
+*Critical path.* `src/main.rs` (Tokio runtime + NATS subscriber) →
+receives `AnalysisInput` → `src/onnx_wrapper.rs` (ONNX inference stub →
+`NeuralFeatures`) → Dgraph query (source reputation) → `src/souffle_wrapper.rs`
+(Datalog rules → verdict) → publish verdict to NATS reply subject.
+
+[quote, README (algorithm-shield subdirectory)]
+____
+Unlike most privacy tools that try to hide from algorithms, Algorithm Shield
+confuses them. Core operations are mathematically proven to be crash-free
+via the proven library. Future versions will use Ephapax with Coq proofs
+for memory safety.
+____
+
+*How it works.* `algorithm-shield/` is a browser extension (MPL-2.0 fallback,
+per the platform/store requirement). The extension consists of:
+
+* `background.js` — service worker that intercepts browsing events and
+  schedules algorithmic noise injections.
+* `heuristic-extractor.js` — extracts content category signals from page
+  metadata.
+* `src/rescript/` — ReScript application code for the extension UI and
+  decision logic.
+* `src/rust/` — formally verified Rust core using the `proven` library for
+  crash-free guarantees on the randomisation and noise-injection algorithms.
+* `src/rules/` — platform-specific rule sets (what counts as "crossing a
+  boundary" on each platform).
+* `ffi/` — Idris2 ABI definitions and Zig FFI implementation (standard
+  hyperpolymath ABI/FFI stack).
+
+The "shapeshifter" model works by making the user's content consumption
+pattern unpredictable over time — visiting content in categories adjacent to
+the user's current profile — without modifying page content or blocking ads.
+
+*Honest caveat.* Algorithm Shield uses MPL-2.0 (not PMPL-1.0-or-later) because
+the Chrome Web Store and Firefox AMO require an OSI-approved licence for
+extension review. This is an explicit exception documented in `algorithm-shield/license/`.
+The Idris2 proofs are "in progress" — the ABI/FFI structure exists but the
+formal correctness proofs are not yet complete.
+
+*Critical path.* `background.js` (service worker) → intercepts navigation →
+calls Rust core via WASM (or native messaging) → Rust returns noise-injection
+schedule → `heuristic-extractor.js` selects adjacent content category →
+browser navigates to confusing content.
+
+== How It Is Checked
+
+[source,bash]
+----
+# Top-level
+just
+
+# disinfo-nesy-detector
+cd disinfo-nesy-detector && cargo test
+cd disinfo-nesy-detector && cargo clippy
+
+# algorithm-shield
+cd algorithm-shield && deno test
+cd algorithm-shield && cargo test  # Rust formal verification tests
+----
+
+The `disinfo-nesy-detector/` crate has a `Cargo.toml` with Tokio, async-nats,
+prost (protobuf), and Prometheus client dependencies. `cargo test` covers the
+orchestration logic and protobuf serialization. `fuzz/` contains libFuzzer
+corpus entries for the protobuf parser.
+
+The `disinfo-nesy-detector/ci/` directory contains Helm charts (for Kubernetes
+deployment) and a Containerfile for the rootless Podman container image
+(no-new-privileges, all capabilities dropped, read-only root filesystem).
+
+The `algorithm-shield/` extension has both a `deno.json` test task (for
+ReScript logic) and a `cargo test` suite (for the Rust formally-verified core).
+`src/rust/` uses the `proven` library for crash-freedom assertions.
+
+== Dogfooded Across The Account
+
+[cols="2,3", options="header"]
+|===
+| Consumer | How it uses this repo
+
+| `maa-framework` (absolute-zero)
+| The neuro-symbolic pipeline in `disinfo-nesy-detector/` shares the ONNX +
+  Datalog architecture pattern with the MAA Framework's absolute-zero
+  component. Architectural decisions made here inform the MAA design.
+
+| `social-media-tools`
+| The platform-specific rules in `algorithm-shield/src/rules/` overlap with
+  `social-media-tools`' platform adapters. Rules for X/Twitter, YouTube, and
+  Facebook are shared.
+
+| `hypatia`
+| Hypatia's neurosymbolic CI/CD intelligence is conceptually descended from
+  the NSAI architecture in `disinfo-nesy-detector/`. The Souffle Datalog
+  rule pattern is the same.
+
+| `proven` (library)
+| `algorithm-shield/src/rust/` explicitly depends on the `proven` library for
+  crash-freedom guarantees. This repo is a consumer of `proven`'s formal
+  verification infrastructure.
+
+| `ephapax`
+| Algorithm Shield's roadmap explicitly targets Ephapax with Coq proofs for
+  memory safety in the next version of the Rust core.
+
+| `neural-foundations`
+| The ONNX model weights and inference infrastructure for `disinfo-nesy-detector/`
+  will be sourced from `neural-foundations` once that repo reaches the required
+  completion level.
+|===
 
 == File Map
 
-[cols="1,2"]
+[cols="2,3", options="header"]
 |===
 | Path | What's There
 
-| `test(s)/` | Test suite
+| `disinfo-nesy-detector/`
+| Rust crate. NATS → ONNX inference → Dgraph → Souffle Datalog → verdict.
+
+| `disinfo-nesy-detector/src/main.rs`
+| Entry point. Tokio async runtime, NATS JetStream subscription, dispatch
+  to neural and symbolic subsystems, Prometheus metrics server.
+
+| `disinfo-nesy-detector/src/onnx_wrapper.rs`
+| ONNX Runtime wrapper. Returns `NeuralFeatures` proto. Currently stubbed.
+
+| `disinfo-nesy-detector/src/souffle_wrapper.rs`
+| Souffle Datalog wrapper. Applies symbolic rules to neural features + graph
+  facts. Currently stubbed.
+
+| `disinfo-nesy-detector/src/model_pb.rs`
+| Protobuf-generated types (`AnalysisInput`, `NeuralFeatures`). Generated
+  by `prost-build`.
+
+| `disinfo-nesy-detector/proto/`
+| `.proto` schema files for `AnalysisInput` and `NeuralFeatures`.
+
+| `disinfo-nesy-detector/eval/`
+| Evaluation scripts and benchmark datasets.
+
+| `disinfo-nesy-detector/ffi/`
+| Idris2 ABI + Zig FFI (standard hyperpolymath ABI/FFI stack).
+
+| `disinfo-nesy-detector/ci/helm/detector/`
+| Helm chart for Kubernetes deployment.
+
+| `disinfo-nesy-detector/Containerfile`
+| Rootless Podman image. `no-new-privileges`, all capabilities dropped,
+  read-only root filesystem.
+
+| `disinfo-nesy-detector/podman-compose.yaml`
+| Local/edge deployment stack: NATS JetStream + Dgraph (Zero + Alpha) + detector.
+
+| `algorithm-shield/`
+| Browser extension (MPL-2.0). Behavioural unpredictability / filter-bubble
+  confusion tool.
+
+| `algorithm-shield/background.js`
+| Service worker. Intercepts navigation events, schedules noise injections.
+
+| `algorithm-shield/heuristic-extractor.js`
+| Extracts content category signals from page metadata.
+
+| `algorithm-shield/src/rescript/`
+| ReScript extension UI and decision logic.
+
+| `algorithm-shield/src/rust/`
+| Formally verified Rust core (crash-freedom via `proven` library).
+
+| `algorithm-shield/src/rules/`
+| Platform-specific rule sets (X/Twitter, YouTube, Facebook, etc.).
+
+| `algorithm-shield/ffi/`
+| Idris2 ABI + Zig FFI for the Rust/ReScript boundary.
+
+| `algorithm-shield/ABI-FFI-README.md`
+| Documents the Idris2/Zig ABI/FFI architecture for this extension.
+
+| `defensive-multiplicity/`
+| Multi-source response orchestration. Scaffolded; implementation pending.
+
+| `defensive-multiplicity/src/`
+| Source placeholder (RSR-standard structure).
+
+| `defensive-multiplicity/ffi/`
+| Idris2 ABI + Zig FFI scaffold.
+
+| `docs/CITATIONS.adoc`
+| Citation instructions for academic use of this platform.
+
+| `ROADMAP.adoc`
+| Four planned phases: Specification → Foundation → Detection Systems →
+  Response Tooling. Phases 2–4 not yet started at the top-level platform.
+
+| `Justfile`
+| Top-level task runner entry points.
+
+| `Mustfile`
+| Must-pass checks (RSR standard).
+
+| `PROOF-NEEDS.md`
+| Formal verification requirements and tracking for all three subdirectories.
+
+| `0-AI-MANIFEST.a2ml`
+| AI agent manifest for this repo.
+
+| `.machine_readable/6a2/STATE.a2ml`
+| Current project state.
+
+| `.machine_readable/6a2/META.a2ml`
+| Architecture decisions and ADRs.
+
+| `.machine_readable/6a2/ECOSYSTEM.a2ml`
+| Ecosystem position and related projects.
 |===
 
 == Questions?
 
-Open an issue or reach out directly — happy to explain anything in more detail.
+Open an issue on GitHub or reach out to Jonathan D.A. Jewell
+<j.d.a.jewell@open.ac.uk> — happy to explain anything in more detail.
