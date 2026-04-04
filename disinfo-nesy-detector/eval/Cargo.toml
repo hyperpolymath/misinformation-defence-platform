@@ -66,3 +66,14 @@ path = "src/download.rs"
 [[bin]]
 name = "run-baseline"
 path = "src/baseline.rs"
+
+[dev-dependencies]
+# Property-based testing
+proptest = "1.6"
+
+# Benchmarking
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "detection_bench"
+harness = false

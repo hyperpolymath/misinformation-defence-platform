@@ -5,10 +5,22 @@
 [metadata]
 project = "misinformation-defence-platform"
 version = "0.1.0"
-last-updated = "2026-03-15"
+last-updated = "2026-04-04"
 status = "active"
 
 [project-context]
 name = "misinformation-defence-platform"
-completion-percentage = 0
+completion-percentage = 20
 phase = "In development"
+
+[crg]
+grade = "C"
+achieved = "2026-04-04"
+test-count = 57
+test-pass-rate = "100%"
+benchmarks-baselined = true
+notes = "CRG blitz D→C: unit(25) + property(11) + e2e(8) + aspect(13) = 57 tests; 12 benchmarks baselined"
+
+[blockers]
+onnx-model = "ONNX runtime disabled pending trained model availability"
+nats-contract-tests = "Require running NATS server — deferred to CRG B"

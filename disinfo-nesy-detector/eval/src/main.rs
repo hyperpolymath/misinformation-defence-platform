@@ -125,7 +125,7 @@ fn main() -> Result<()> {
                     result.model_name,
                     exp_metrics.avg_completeness * 100.0,
                     exp_metrics.feature_consistency * 100.0,
-           Add pinned toolchains + reproducible build         exp_metrics.avg_evidence_count
+                    exp_metrics.avg_evidence_count
                 );
             }
         }
