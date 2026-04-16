@@ -157,7 +157,7 @@ impl Explanation {
         // Summarize top evidence
         if !self.evidence.is_empty() {
             let mut sorted_evidence = self.evidence.clone();
-            sorted_evidence.sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap());
+            sorted_evidence.sort_by(|a, b| b.weight.partial_cmp(&a.weight).expect("TODO: handle error"));
 
             let top_evidence: Vec<_> = sorted_evidence.iter().take(3).collect();
             if !top_evidence.is_empty() {

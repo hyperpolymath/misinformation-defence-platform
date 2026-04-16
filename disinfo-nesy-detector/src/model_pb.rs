@@ -45,8 +45,8 @@ mod tests {
         // VERIFICATION: Ensures that encoding and decoding preserves bit-fidelity.
         let input = AnalysisInput { ... };
         let mut buf = Vec::new();
-        input.encode(&mut buf).unwrap();
-        let decoded = AnalysisInput::decode(&buf[..]).unwrap();
+        input.encode(&mut buf).expect("TODO: handle error");
+        let decoded = AnalysisInput::decode(&buf[..]).expect("TODO: handle error");
         assert_eq!(input, decoded);
     }
 }

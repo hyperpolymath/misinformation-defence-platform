@@ -88,7 +88,7 @@ fn download_file(url: &str, output_path: &Path) -> Result<()> {
     pb.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-            .unwrap()
+            .expect("TODO: handle error")
             .progress_chars("#>-"),
     );
 
@@ -139,7 +139,7 @@ fn extract_zip(archive_path: &Path, output_dir: &Path) -> Result<()> {
     pb.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} Extracting: [{wide_bar:.cyan/blue}] {pos}/{len}")
-            .unwrap(),
+            .expect("TODO: handle error"),
     );
 
     for i in 0..archive.len() {

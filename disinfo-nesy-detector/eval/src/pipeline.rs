@@ -321,7 +321,7 @@ impl EvaluationPipeline {
             self.load_dataset()?;
         }
 
-        let dataset = self.dataset.as_ref().unwrap();
+        let dataset = self.dataset.as_ref().expect("TODO: handle error");
         let train_samples = self.get_train_samples();
         let eval_samples = self.get_eval_samples();
 
