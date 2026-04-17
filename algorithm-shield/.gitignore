@@ -44,3 +44,9 @@ correspondence/
 
 # Crash recovery artifacts
 ai-cli-crash-capture/
+_build/
+deps/
+.elixir_ls/
+.cache/
+*.tmp
+build/
