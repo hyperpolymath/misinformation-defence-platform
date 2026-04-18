@@ -1,0 +1,957 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+
+= misinformation-defence-platform — CRG Audit (2026-04-18)
+Jonathan D.A. Jewell
+2026-04-18
+:toc:
+:sectnums:
+
+== Scope and Standard
+
+Evaluates the `verification-ecosystem/misinformation-defence-platform`
+repository against *Component Readiness Grades v2.0 (STRICT)*,
+2026-03-30 revision. The repo is an *umbrella* containing three
+subdirectory projects (`disinfo-nesy-detector/`, `algorithm-shield/`,
+`defensive-multiplicity/`) and is self-declared *C* in a flat
+`[crg] grade = "C"` block under `.machine_readable/6a2/STATE.a2ml`
+(last-updated 2026-04-04). The audit checks the claim against on-disk
+evidence and the v2.0 "honest D > dishonest B" clause.
+
+- Standard: `standards/component-readiness-grades/COMPONENT-READINESS-GRADES.md`
+- Criteria boilerplate: `rsr-template-repo/docs/governance/CRG-CRITERIA.adoc`
+- Audit template: `rsr-template-repo/docs/governance/CRG-AUDIT-TEMPLATE.adoc`
+- Self-declared grade (prior art):
+  * `.machine_readable/6a2/STATE.a2ml` → `[crg] grade = "C"`,
+    `achieved = "2026-04-04"`, `test-count = 57`.
+  * `TEST-NEEDS.md` header: "CRG Grade: C — ACHIEVED 2026-04-04".
+  * `EXPLAINME.adoc` 2026-04-04 rewrite presents three subprojects as
+    substantially implemented.
+  * `README.adoc` (older, 2026-02-24) still states *"Project Status:
+    Specification Phase — This repository currently contains project
+    infrastructure only"* — the README and STATE directly contradict.
+  * `TOPOLOGY.md` (2026-02-19) puts all three platform components at
+    *10%* completion.
+- Audit date: 2026-04-18
+- Auditor: Jonathan D.A. Jewell
+
+Schema note: umbrella STATE.a2ml uses a *sectioned* `[crg] / grade = "C"`
+block, not the `[metadata] crg-grade = "C"` flat key. HYP-S005 pattern
+matching the flat `[metadata]` form will not fire by default; a
+sectioned-block extension of HYP-S005 would. See §HYP-S005 canary.
+
+The audit grades the repo *as-is today*, not aspirationally.
+
+== v2.0 Strictness Recap
+
+[cols="1,3,4"]
+|===
+| Grade | Release Stage | Hard Requirement (v2.0)
+
+| X | None             | Untested.
+| F | Reject           | Harmful, wasteful, or superseded.
+| E | Pre-alpha        | >=1 test, failures documented.
+| D | Alpha            | Test matrix + scope documented + *RSR compliance mandatory*.
+| C | Alpha-stable     | Dogfooded, CI green, *deep per-file + per-directory annotation*.
+| B | Beta             | 6+ *diverse* external targets, issues fed back.
+| A | Stable           | Real-world external feedback confirms value; no harm.
+|===
+
+Publication requires B+. Long alpha is discipline, not shame.
+
+== Evidence Inventory (verified 2026-04-18)
+
+=== Structural compliance (Grade D floor)
+
+[cols="2,1,3"]
+|===
+| Item | State | Source
+
+| RSR mandatory workflows (17+)
+| PRESENT (18 YAML files in `.github/workflows/`)
+| `.github/workflows/` — canonical set incl. hypatia-scan, codeql,
+  scorecard, scorecard-enforcer, rsr-antipattern, guix-nix-policy,
+  secret-scanner, security-policy, wellknown-enforcement, ts-blocker,
+  npm-bun-blocker, quality, mirror, instant-sync, workflow-linter,
+  casket-pages, plus `dogfood-gate.yml` and `boj-build.yml`.
+
+| `.machine_readable/6a2/` canonical A2ML (umbrella)
+| PRESENT (STATE, META, ECOSYSTEM, AGENTIC, NEUROSYM, PLAYBOOK)
+| Only STATE.a2ml has substantive content (27 lines). META (10 lines)
+  and ECOSYSTEM (11 lines) are near-empty stubs.
+  `META.a2ml` has a `[metadata]` block only — no `architecture-decisions`,
+  no `development-practices`, no `design-rationale`.
+  `ECOSYSTEM.a2ml` declares `type = "component"` with no
+  `related-projects`. Four of six 6a2 files are schema skeletons.
+
+| `0-AI-MANIFEST.a2ml`
+| PRESENT (4 208 bytes)
+| Root
+
+| `EXPLAINME.adoc`
+| PRESENT (10 916 bytes, 2026-04-04)
+| Root. *Factually drifted* from code — see §Code-vs-EXPLAINME drift.
+
+| `README.adoc` / `EXPLAINME.adoc` / `ROADMAP.adoc` / `CONTRIBUTING.md` /
+  `SECURITY.md` / `MAINTAINERS.adoc` / `CODE_OF_CONDUCT.md` / `NOTICE` /
+  `CITATION.cff` / `codemeta.json` / `QUICKSTART-{USER,DEV,MAINTAINER}.adoc`
+| PRESENT
+| Root
+
+| `docs/` orientation subtree
+| *minimal* — `CITATIONS.adoc` plus empty `accessibility/`,
+  `compliance/`, `reports/` directories. No `architecture/`,
+  `decisions/`, `governance/` (until this audit), `practice/`,
+  `specification/`, or `wiki/`.
+| `docs/`
+
+| `LICENSE` + `LICENSES/` directory
+| PRESENT (`LICENSE` PMPL-1.0-or-later, `LICENSES/PMPL-1.0-or-later.txt`,
+  `LICENSES/MPL-2.0.txt`).
+| Root
+
+| `guix.scm` + `flake.nix`
+| PRESENT (both)
+| Root
+
+| `.well-known/` (security.txt, ai.txt, humans.txt)
+| PRESENT (all three, plus a `groove` subdirectory)
+| `.well-known/`
+
+| SPDX headers on source
+| PRESENT on 25/25 Rust files (all `.rs` under `disinfo-nesy-detector/`
+  and `algorithm-shield/src/rust/` carry a SPDX header). **VIOLATION** —
+  several `disinfo-nesy-detector/src/*.rs` and `Cargo.toml` declare
+  `SPDX-License-Identifier: Apache-2.0` with
+  `SPDX-FileCopyrightText: 2024 Hyperpolymath`, contrary to the licence
+  policy (should be PMPL-1.0-or-later) and the author-attribution rule
+  (should be Jonathan D.A. Jewell).
+| `disinfo-nesy-detector/src/{main,onnx_wrapper,souffle_wrapper,model_pb}.rs`,
+  `disinfo-nesy-detector/Cargo.toml`.
+
+| `Containerfile` (not `Dockerfile`)
+| PRESENT (`disinfo-nesy-detector/Containerfile`,
+  `disinfo-nesy-detector/.clusterfuzzlite/Containerfile`). Zero
+  `Dockerfile` anywhere.
+| Container policy met.
+
+| `Justfile` + `Mustfile` (no `Makefile`)
+| PRESENT (umbrella + each subdir); zero `Makefile`.
+| Umbrella `Justfile` is a *self-knowing policy violation* — see
+  §Self-knowing policy violations.
+
+| Contractile trident (umbrella)
+| PRESENT at `.machine_readable/{INTENT,TRUST,MUST,ADJUST}.contractile`
+  plus contractile dirs `dust/`, `lust/`, `must/`. `bust` verb file
+  absent. Plus `contractile.just` at root.
+| Trident present; six-verb layout partial. Subdirs also have
+  `contractiles/` dirs each.
+
+| Remote
+| `origin → git@github.com:hyperpolymath/misinformation-defence-platform.git`
+  plus four mirror remotes (bitbucket, codeberg, gitlab, sourcehut).
+| `git remote -v`. Per GitHub-only mirroring rule the four mirrors
+  should be driven by the downstream hub-and-spoke; their presence as
+  named remotes is informational only.
+
+| `.tool-versions`
+| *absent at root* (no `.tool-versions` file).
+| Root
+
+| `setup.sh`, `llm-warmup-{dev,user}.md`, `stapeln.toml`
+| PRESENT
+| Root
+
+| Monorepo `.git` hygiene
+| CLEAN — a single `.git` at umbrella root; no nested `.git` dirs in
+  any subproject. No `.gitmodules`.
+| `find -name .git -type d` → 1 hit.
+|===
+
+*RSR compliance verdict*: **met — D-floor satisfied**. Workflows
+parse, LICENSE trident is clean, guix/flake present, Containerfile
+policy met, zero Makefile / zero banned-language source
+(no `*.py`, `*.go`, `*.ts`, `*.tsx`, `v.mod`). The D-floor-*content*
+weakness carried forward into C: the ROADMAP.adoc is "Awaiting
+Specification"; the umbrella Justfile is mostly TODO-stubs; the
+README still says "Specification Phase"; four of six umbrella 6a2
+files are stubs; subprojects' `.claude/CLAUDE.md` and `.claude/`
+notes still reference *legacy* `STATE.scm / META.scm` (pre-a2ml
+migration) — all D-level drift, nothing merge-conflict or banned.
+
+=== Ecosystem-overlap alarm (Grade D+ honesty check)
+
+No overlapping sister repo was identified at the same level as
+`proof-of-work` ↔ `games-ecosystem/pow-the-game`. However, an *internal*
+overlap exists: `algorithm-shield/src/rules/` is flagged in
+EXPLAINME.adoc as overlapping with `social-media-tools/` platform
+adapters. Absent an EXPLAINME note picking one as canonical, the
+overlap is a scope-and-governance observation, not a CRG-reducing
+finding.
+
+=== Umbrella vs subproject identity
+
+The umbrella STATE.a2ml claims C *as the platform*, but the three
+subprojects each have their own STATE/META/CLAUDE.md trees (in the
+*legacy* SCM form — `disinfo-nesy-detector/.claude/CLAUDE.md` and
+`defensive-multiplicity/.claude/CLAUDE.md` both still reference
+`STATE.scm / META.scm` after the 2026-04-12 A2ML migration). This
+produces a *governance-drift* finding: the umbrella has migrated to
+a2ml under `.machine_readable/6a2/`, subprojects have partially
+migrated but their `.claude/CLAUDE.md` files were not updated in the
+sweep. Not a grading blocker, but contradicts the CLAUDE.md global
+rule that A2ML migration is complete.
+
+=== Code and proofs
+
+[cols="2,1,3"]
+|===
+| Item | Count | Notes
+
+| Rust source files (total, excluding target/node_modules)
+| 25 `.rs` files
+| Total 6 030 LOC. Largest: `disinfo-nesy-detector/eval/src/baselines.rs`
+  832, `eval/src/model_card.rs` 800, `eval/src/pipeline.rs` 592,
+  `eval/src/explainability.rs` 575, `eval/src/metrics.rs` 543.
+
+| `disinfo-nesy-detector/src/` (the *actual* detector service)
+| 4 files, 165 LOC (main 46 + model_pb 52 + onnx_wrapper 32 +
+  souffle_wrapper 35)
+| These are all *stubs*. `main.rs` body is `// ... [Initialization
+  logic]` / `// ... [other imports]` comments; `onnx_wrapper::run_inference`
+  returns a hard-coded `HashMap { "fakeness_score": 0.5 }`;
+  `souffle_wrapper` is similar placeholder. `#![forbid(unsafe_code)]`
+  is present at `main.rs:20`.
+
+| `disinfo-nesy-detector/eval/` (the *real* code-base)
+| 10 src files + 3 test files + benches, 4 623 src LOC + 856 test LOC
+| Substantive baseline classifiers (keyword + TF-IDF + majority),
+  explainability builder, metrics, dataset loader, pipeline. This is
+  where the claimed 57 tests live.
+
+| `algorithm-shield/src/rust/` (WASM rule engine)
+| 5 files (`lib.rs` + `minikaren/{actions,context,rules,mod}.rs`)
+| `#![forbid(unsafe_code)]` at `lib.rs:13`. SPDX header mismatch —
+  `lib.rs` says `// Copyright (c) 2026 hyperpolymath` (attribution
+  violation; should be "Jonathan D.A. Jewell").
+
+| `algorithm-shield/src/rescript/` content
+| 7 subdirs (`actuator/`, `bindings/`, `lens/`, `membrane/`, `observer/`,
+  `persona/`, `test/`) + 2 `.res` files under `platforms/youtube/`.
+  16 `.res` files total across the subtree.
+| Substantive ReScript code; `test/WasmIntegrationTest.res` present.
+  `platforms/{instagram,tiktok,twitter}/` directories are *empty*.
+
+| `algorithm-shield/node_modules/`
+| PRESENT (4 entries: `@rescript`, `rescript` + 2 lock-related)
+| *Policy violation* — CLAUDE.md rule says "No `node_modules` in
+  production". Even for dev deps, Deno is preferred; `package.json`
+  declares `@rescript/core` + `rescript` with npm-style semver —
+  `deno.json` also present but the node_modules tree exists on disk.
+
+| `defensive-multiplicity/` implementation
+| 1 `.res` file (`examples/SafeDOMExample.res`), no Rust source, no
+  `Cargo.toml`, no ABI/FFI content, 62 files total (mostly
+  documentation scaffolding).
+| Justfile says every verb "not configured yet". This is a *pre-E*
+  component pretending to be part of a C-graded umbrella.
+
+| `#![forbid(unsafe_code)]` (library level)
+| PRESENT at `disinfo-nesy-detector/src/main.rs:20` and
+  `algorithm-shield/src/rust/src/lib.rs:13`
+| Good signal, narrowly.
+
+| Dangerous-pattern scan in source/test dirs (`believe_me`,
+  `assert_total`, `Admitted`, `sorry`, `unsafeCoerce`, `Obj.magic`)
+| 1 false-positive hit
+| `algorithm-shield/src/rescript/bindings/ChromeStorage.res` matches
+  `sorry` (substring in a comment/message, not a proof-hole
+  primitive). Other hits are policy-text bans in
+  `.machine_readable/MUST.contractile`,
+  `.machine_readable/agent_instructions/methodology.a2ml`, and two
+  `AGENTIC.a2ml` / `NEUROSYM.a2ml` files — bans on use, not uses.
+
+| Idris2 ABI / Zig FFI (claimed in EXPLAINME)
+| ZERO `.idr` files, ZERO `.zig` files under `disinfo-nesy-detector/ffi/`,
+  `algorithm-shield/ffi/`, or `defensive-multiplicity/ffi/`.
+| `PROOF-NEEDS.md` itself admits: "Template ABI removed — was
+  creating false impression of formal verification." EXPLAINME.adoc
+  then re-asserts the Idris2/Zig stack as if it existed.
+
+| `panic-attack assail` run record
+| Not cited in STATE or audit logs
+| Pre-commit rule standing; not a grading blocker.
+|===
+
+*Code-vs-EXPLAINME drift.* EXPLAINME.adoc claims eleven concrete
+source paths, of which on-disk:
+
+- `disinfo-nesy-detector/src/main.rs` ✓ (but 46-LOC stub)
+- `disinfo-nesy-detector/src/onnx_wrapper.rs` ✓ (stub, hard-coded)
+- `disinfo-nesy-detector/src/souffle_wrapper.rs` ✓ (stub)
+- `disinfo-nesy-detector/src/model_pb.rs` ✓
+- `disinfo-nesy-detector/proto/` ✓ (directory present)
+- `disinfo-nesy-detector/eval/` ✓ (directory present)
+- `disinfo-nesy-detector/ffi/` ✓ but *empty of Idris2/Zig* (claim
+  "standard hyperpolymath ABI/FFI stack" is not substantiated)
+- `disinfo-nesy-detector/ci/helm/detector/` — directory exists
+- `disinfo-nesy-detector/Containerfile` ✓
+- `disinfo-nesy-detector/podman-compose.yaml` ✓
+- `algorithm-shield/background.js` — **MISSING at repo root of
+  `algorithm-shield/`**; inspected tree shows only
+  `algorithm-shield/src/background.js`. EXPLAINME path-prefix is
+  `algorithm-shield/background.js`, on-disk path is
+  `algorithm-shield/src/background.js`. Minor but symptomatic.
+- `algorithm-shield/heuristic-extractor.js` — same issue (lives under
+  `src/`, not at `algorithm-shield/` root).
+- `algorithm-shield/src/rescript/` ✓
+- `algorithm-shield/src/rust/` ✓
+- `algorithm-shield/src/rules/` ✓ (directory)
+- `algorithm-shield/ffi/` directory — present on-disk, content
+  not verified as Idris2/Zig (consistent with PROOF-NEEDS admission)
+
+EXPLAINME.adoc also lists `defensive-multiplicity/src/` and
+`defensive-multiplicity/ffi/` as "Source placeholder (RSR-standard
+structure)" and "Idris2 ABI + Zig FFI scaffold". On-disk
+`defensive-multiplicity/` has *no `src/` directory at all* — only
+`examples/SafeDOMExample.res`. The "scaffolded" claim is charitable
+to the point of inaccuracy.
+
+This is not as egregious as proof-of-work's ten-of-sixteen File-Map
+misses, but the EXPLAINME leads the reader to expect a more
+implemented repo than exists.
+
+=== Test matrix — declared vs actual
+
+STATE.a2ml `[crg]` and `TEST-NEEDS.md` declare:
+
+[cols="2,1,1,2"]
+|===
+| Suite | Declared | Grep-verifiable | Notes
+
+| Unit tests (inline, `eval/src/*.rs`) | 25 | ≥23 `#[test]` across
+  `baselines.rs` (5), `datasets.rs` (3), `explainability.rs` (4),
+  `metrics.rs` (7), `pipeline.rs` (3), `model_card.rs` (3)
+| A grep-by-file summed visible attributes to ~25 if
+  `model_card.rs (3)` is counted — TEST-NEEDS omits `model_card.rs`
+  from its breakdown and omits `baseline.rs`. Either the count
+  `baselines(5)+datasets(3)+explainability(4)+metrics(7)+pipeline(3) = 22`
+  as written, or +3 for `model_card.rs` not shown = 25. *Plausible but
+  TEST-NEEDS breakdown is off by 3.*
+
+| Property tests (`tests/property_tests.rs`) | 11 | 18 `#[test]` + 7
+  `proptest!` blocks — total proptest blocks 7, total `#[test]` attrs
+  18.
+| Grep count (18) *exceeds* declared (11). Declared number 11 likely
+  counts "properties verified" in prose, not `#[test]` attributes.
+  Reverse-overclaim (underclaim) — rare and mostly favourable.
+
+| E2E tests (`tests/e2e_tests.rs`) | 8 | 8 `#[test]`
+| Exact match.
+
+| Aspect tests (`tests/aspect_tests.rs`) | 13 | 13 `#[test]`
+| Exact match.
+
+| Smoke / build | "PASS" | not separately grep-verifiable | `cargo
+  test` umbrella claim.
+
+| Benchmarks | 12 baselined | 1 bench file
+  (`eval/benches/detection_bench.rs`) — criterion harness, ~10-12
+  benchmark lines declared in TEST-NEEDS
+| Plausible (criterion groups compose multiple named benchmarks
+  within one harness file).
+
+| *Total integration tests* | *57 (25 unit + 11 property + 8 E2E +
+  13 aspect)* | *47 test attributes* if we take `#[test]` at face value
+  (22 inline + 18 property + 8 e2e + 13 aspect — but the 18 vs 11
+  gap is in the property file)
+| Using the TEST-NEEDS breakdown arithmetic (25 + 11 + 8 + 13 = 57)
+  with file-level `#[test]` attribute counts (22 + 18 + 8 + 13 = 61)
+  gives a different total. Close enough that the 57 claim is
+  *defensible* once property-test semantics are pinned down — but
+  TEST-NEEDS arithmetic does not match a direct attribute grep.
+|===
+
+Reconciliation: the 57 figure is roughly consistent with on-disk
+`#[test]` counts once `proptest!` block semantics are chosen. Unlike
+proof-of-work, *this is not a fabricated test surface*. The tests are
+real and substantive (`property_tests.rs` has 7 proptest blocks with
+real generators; `aspect_tests.rs` includes adversarial/Unicode/null-
+byte coverage; `e2e_tests.rs` is end-to-end pipeline). The honesty
+delta on tests is small — at most a 3-test breakdown mismatch.
+
+CI coverage: 18 workflow files under `.github/workflows/`. Last green
+run date not cited in STATE. No CI-badge link in README.
+
+*Critical caveat.* All 57 tests cover `disinfo-nesy-detector/eval/`
+— the *baseline evaluation harness*, not the detector service. The
+service entry points (`src/main.rs`, `src/onnx_wrapper.rs`,
+`src/souffle_wrapper.rs`) are stubs with zero `#[test]` coverage;
+`algorithm-shield/` and `defensive-multiplicity/` have no Rust tests
+at all. What was CRG-blitz-tested is a *classifier baseline crate*,
+not "the platform". This is the single biggest scope question in the
+audit.
+
+=== Annotation depth
+
+v2.0 C requires **per-file and per-directory orientation**. Evidence:
+
+- Umbrella `docs/` contains `CITATIONS.adoc` plus three empty
+  sub-directories (`accessibility/`, `compliance/`, `reports/`). No
+  `architecture/`, `decisions/`, `governance/` (until this audit),
+  `practice/`, `specification/`, or `wiki/`. One file of actual
+  content, matching proof-of-work's baseline.
+
+- Subproject READMEs: each subdir has a `README.adoc` and an
+  `ABI-FFI-README.md`. `algorithm-shield/` additionally has a
+  `wiki/`, `ARCHITECTURE.md`, `docs/`, `scripts/`, `examples/`,
+  `RSR_OUTLINE.adoc`. `disinfo-nesy-detector/` has `docs/`, `eval/`,
+  `ci/`, `proto/`, `examples/`, plus a red-flag `RUST_CONVERSION_NEEDED.md`
+  (suggests a prior V-or-other language variant existed).
+
+- Per-module/per-subtree README coverage within subprojects: sparse.
+  `disinfo-nesy-detector/src/` has no subtree README (4 files, no
+  orienting doc other than the top-of-file `//!` doc comments — which
+  are substantive in `main.rs` and `onnx_wrapper.rs`, less so in the
+  other two). `algorithm-shield/src/rescript/` subtree (actuator/,
+  bindings/, lens/, membrane/, observer/, persona/, test/) has no
+  orienting READMEs. `algorithm-shield/src/platforms/
+  {instagram,tiktok,twitter}/` are **empty directories** claimed
+  implicitly by the platform-rules architecture.
+
+- EXPLAINME.adoc (10 916 bytes) is substantive and better-structured
+  than proof-of-work's — it has a *quote/how-it-works/honest-caveat/
+  critical-path* pattern that explicitly flags stubs. But the File
+  Map and Dogfooded-Across-The-Account tables (see below) carry
+  unsubstantiated claims.
+
+- ROADMAP.adoc is *"Roadmap Status: Awaiting Specification"*. For a
+  repo claiming C on 2026-04-04, the roadmap being "awaiting
+  specification" two weeks later is a contradiction on its face.
+
+- `README.adoc` (2026-02-24) still says *"Project Status: Specification
+  Phase — This repository currently contains project infrastructure
+  only. Core specification and implementation details will be uploaded
+  shortly."* This is the user-facing front door and it directly
+  denies the C claim. A C-grade repo cannot advertise itself as
+  "specification phase" in its README. This is the single loudest
+  honesty finding.
+
+- `.machine_readable/6a2/` umbrella files other than STATE: META is
+  10 lines, ECOSYSTEM is 11 lines, AGENTIC/NEUROSYM/PLAYBOOK not
+  inspected in detail but consistent with the near-empty pattern
+  seen in proof-of-work.
+
+- Subproject `.claude/CLAUDE.md` files still reference **legacy
+  `STATE.scm / META.scm`** rather than the `.machine_readable/6a2/*.a2ml`
+  layout. Estate-wide migration is declared COMPLETE 2026-04-12; two
+  subdirs here did not get the sweep.
+
+=== Dogfooding / home-stable evidence
+
+STATE.a2ml has *no* `[dogfooding-status]` section. (Grep under
+`.machine_readable/` returns zero hits for `dogfood`.) There is no
+`docs/practice/DOGFOOD-LOG.adoc`. No `[external-targets]`, no
+`[issues-fed-back]`, no `[field-signal]`, no `[grade-b-status]`.
+
+Indirect / adjacent signals:
+
+- `.github/workflows/dogfood-gate.yml` — a *gate* workflow, not a
+  dogfood log. Identical pattern to proof-of-work.
+- EXPLAINME.adoc §"Dogfooded Across The Account" names six
+  integrations:
+
+  * `maa-framework` (absolute-zero) — "shares the ONNX + Datalog
+    architecture pattern". This is an *architectural similarity*
+    claim, not a dogfooding claim. No code / cargo / workflow tie.
+  * `social-media-tools` — "platform-specific rules ... overlap".
+    Overlap is scope-drift, not dogfooding.
+  * `hypatia` — "Hypatia's NSAI architecture is *conceptually
+    descended* from this". Conceptual descent is not dogfooding.
+  * `proven` (library) — "`algorithm-shield/src/rust/` *explicitly
+    depends on* the `proven` library". Verified against
+    `algorithm-shield/src/rust/Cargo.toml`: **no `proven` dependency
+    is declared**. The comment block in `lib.rs` says "v2.0: Will
+    integrate proven via Ephapax hot paths". Present-tense claim,
+    future-tense reality.
+  * `ephapax` — "roadmap explicitly targets Ephapax" — explicitly a
+    roadmap item.
+  * `neural-foundations` — "will be sourced from neural-foundations
+    once that repo reaches the required completion level" — explicit
+    future tense.
+
+None of the six claimed dogfood integrations is substantiated by
+in-tree code, `Cargo.toml`, or workflow evidence. This is the same
+*fabricated-dogfood* pattern as proof-of-work, with an even longer
+list (6 vs 4). The section correctly uses conceptual/future language
+*within each row's prose* but the section *heading* ("Dogfooded Across
+The Account") asserts present-tense dogfooding.
+
+- Completion-percentage = 20 in STATE concedes the project is
+  one-fifth built — *lower than proof-of-work's 50*, materially
+  inconsistent with a "home-stable" C claim.
+- TOPOLOGY.md shows all three platform components at 10% completion.
+- TEST-NEEDS.md explicitly lists "What is Stubbed / Not Yet
+  Implemented": ONNX wrapper, Souffle wrapper, NATS JetStream service,
+  contract tests, reflexive tests — *all three of the detector's
+  core components*. This is honest, and it is *also* a direct
+  refutation of the C claim: the thing being tested is the
+  *evaluation baseline harness*, not the detector.
+- `.hypatia/` directory exists, content not inspected as a run-log.
+
+v2.0 C requires *continuous* home-context use with no known failures.
+The evidence does not support this for misinformation-defence-platform
+today. Nothing in the tree demonstrates that this detector has
+classified a real piece of content in anger.
+
+=== External validation (Grade B / A)
+
+No `[external-targets]`. No `[issues-fed-back]`. No `[field-signal]`.
+No `[grade-b-status]` either.
+
+External-adjacent signals:
+
+- Dependabot PRs (#16, #17 visible in `git log`) — automated
+  dependency bumps, not external users. Not field feedback under v2.0.
+- Mirror remotes configured (bitbucket/codeberg/gitlab/sourcehut) —
+  presence is not usage.
+- No citation standards outside the repo; `CITATION.cff` and
+  `codemeta.json` were added 2026-04-17 as metadata scaffolding,
+  not as evidence of third-party citation.
+
+Per v2.0, reaching B requires *6+ diverse external targets* actually
+using the software with feedback fed back. misinformation-defence-platform
+is at *0*.
+
+=== HYP-S005 canary
+
+HYP-S005 as currently specified matches the *flat*
+`[metadata] crg-grade = "C"` key in STATE.a2ml and compares it to
+per-suite counts and on-disk inventory.
+
+STATE.a2ml here uses the *sectioned* form
+`[crg] grade = "C"`, so the existing flat-key HYP-S005 matcher does
+*not* fire by default. That is a detector-scope bug, not a free pass:
+the canary should be extended to cover both schema variants (the
+umbrella STATE.a2ml clearly declares `grade = "C"` in a `[crg]`
+section).
+
+If HYP-S005 covered the sectioned schema, this repo would trigger
+on three independent signals:
+
+1. `[crg] test-count = 57` with grep-verifiable `#[test]` attributes
+   = 47 (ignoring the `proptest!` semantics). ~21% overclaim when
+   counted by `#[test]` attributes; defensible once proptest is
+   included. *Softer signal than proof-of-work's 37-56% overclaim.*
+2. Scope drift: the 57 tests cover `eval/` (baseline classifier
+   harness), not the detector service; the three claimed detector
+   stages (ONNX, Dgraph, Souffle) are 35-46 LOC stubs each, untested.
+3. Six "Dogfooded Across The Account" claims, zero substantiated in
+   code or `Cargo.toml`.
+
+No HYP-S005 suppression comment is present and none is warranted.
+
+*Recommendation for estate-wide canary*: extend HYP-S005 to match the
+sectioned `[crg] / grade = "..."` form in addition to the flat
+`[metadata] crg-grade = "..."` form. File against
+`hyperpolymath/hypatia` canary-rules.
+
+=== Self-knowing policy violations
+
+The following are *rules Claude knows about from CLAUDE.md and
+MEMORY.md* that this repo violates today. "Self-knowing" because a
+rule-aware pass should have caught them.
+
+- **Attribution / licence mismatch**:
+  `disinfo-nesy-detector/Cargo.toml` declares
+  `license = "Apache-2.0"` and `SPDX-FileCopyrightText: 2024
+  Hyperpolymath`. The four `.rs` files in
+  `disinfo-nesy-detector/src/` carry `SPDX-License-Identifier:
+  Apache-2.0` / `SPDX-FileCopyrightText: 2024 Hyperpolymath`. Licence
+  Policy Rule 1 says PMPL-1.0-or-later. Author Attribution rule says
+  "NEVER hyperpolymath as author name". Both violated.
+  `algorithm-shield/src/rust/src/lib.rs` also has `Copyright (c) 2026
+  hyperpolymath` in the header.
+
+- **Justfile stubs (recurring pattern)**: the umbrella `Justfile`
+  recipes for `build`, `test`, `clean`, `fmt`, `lint` all literally
+  print "TODO: Add X command". CLAUDE.md says "Avoid adding ongoing
+  maintenance effort" and RSR Rule R-020 implies a working Justfile.
+  An umbrella Justfile full of TODO-stubs *next to* a sub-project
+  Justfile (`defensive-multiplicity/Justfile`) that also says
+  "not configured yet" is an auditable pattern — the contractile
+  ought-file is declarative but the doing-file is empty.
+
+- **README contradicts STATE**: README.adoc says
+  "Specification Phase ... infrastructure only"; STATE says C-grade
+  achieved 2026-04-04. Exactly the kind of contradiction a
+  contractile `on_close` drift-check should catch. Not caught.
+
+- **Fabricated dogfood integrations**: six EXPLAINME claims, zero
+  verified in `Cargo.toml` / workflows. Same pattern as proof-of-work
+  — this is now a *recurring* finding across estate. Worth memo-ing.
+
+- **`node_modules/` committed/present in `algorithm-shield/`**: even
+  for ReScript compile-side deps the policy preference is Deno. At
+  minimum `node_modules/` should be gitignored out.
+
+- **Subproject `.claude/CLAUDE.md` points at legacy SCM**: two
+  subdirs (`disinfo-nesy-detector/.claude/CLAUDE.md`,
+  `defensive-multiplicity/.claude/CLAUDE.md`) still list
+  `STATE.scm / META.scm / ECOSYSTEM.scm / ...` as the canonical
+  files. A2ML migration was declared COMPLETE 2026-04-12.
+
+- **ROADMAP "Awaiting Specification"** in a C-graded repo. Same
+  pattern as proof-of-work's unfilled rsr-template-repo placeholder;
+  here it's a more curated template but still claims no phase-2+ work
+  has started.
+
+- **EXPLAINME path-prefix drift**: `algorithm-shield/background.js` /
+  `algorithm-shield/heuristic-extractor.js` are at `.../src/` on disk.
+  Minor but symptomatic of documentation-not-read-against-the-tree.
+
+- **HEAD~1 grandfathering**: no evidence of this pattern here
+  (recent commits are clean, no marker strings). Called out as
+  "today's pattern" in the audit request but *not* found in this
+  repo — noted for audit trail.
+
+=== EXPLAINME fabrication check
+
+Summary of EXPLAINME.adoc honesty against on-disk truth:
+
+- *Platform Structure* table: the three subprojects exist. States
+  `disinfo-nesy-detector` as "Rust core implemented; ONNX and Souffle
+  wrappers stubbed" — on-disk `src/` is 165 LOC of almost-all-stub;
+  the *baseline-classifier eval harness* (`eval/`) is the real
+  implemented surface. Partial misdirection: the "implemented" claim
+  is true of `eval/`, not the detector service.
+
+- *"The detection path runs in `disinfo-nesy-detector/`"* paragraph:
+  describes NATS JetStream + ONNX + Dgraph + Souffle pipeline in
+  present tense, with an explicit *Honest caveat* admitting stubs.
+  The caveat mitigates; but the *critical path* described is a
+  blueprint, not a thing you can run.
+
+- *File Map*: broadly accurate directory-level; drift at the two
+  `algorithm-shield/{background,heuristic-extractor}.js` entries
+  (off by `/src/` prefix). Idris2/Zig ABI claim is directly
+  refuted by `PROOF-NEEDS.md`'s own "Template ABI removed" note.
+
+- *Dogfooded Across The Account* (6 rows): zero substantiated; see
+  §Dogfooding. This table is the worst honesty surface in the doc.
+
+Verdict: EXPLAINME is *better-structured* than proof-of-work's
+(honest-caveat sections built in) but still carries fabricated
+dogfood claims and a fabricated ABI/FFI claim.
+
+=== Scope — "misinformation defence" vs on-disk reality
+
+The repo name promises a platform for *detection, analysis, and
+response* to misinformation. On-disk today:
+
+- *Detection*: `disinfo-nesy-detector/eval/` contains working
+  *baseline* classifiers (keyword match, TF-IDF, majority). These are
+  textbook baselines; they detect at the level of a CS-intro
+  assignment. The detector *service* (the neuro-symbolic NATS-ONNX-
+  Souffle pipeline described in README/EXPLAINME/TOPOLOGY) is 165
+  LOC of stub across four files. ONNX runtime is disabled pending
+  model availability (STATE `[blockers]`). Souffle integration is
+  placeholder. Dgraph integration is interface-only. The neuro-
+  symbolic claim is *architectural aspiration*, not today.
+
+- *Analysis*: not a separate component. `eval/` does evaluation, not
+  analysis-of-real-content.
+
+- *Response*: `defensive-multiplicity/` is supposed to be this. On
+  disk it has 62 files, one of which is a `.res` source
+  (`examples/SafeDOMExample.res`). No `src/`, no `Cargo.toml`, no
+  domain code. Justfile says every verb is "not configured yet".
+  This component is at *pre-E*.
+
+- *Algorithm-shield*: the most-implemented subproject — a browser
+  extension with ReScript + Rust WASM + minikaren rule engine.
+  Substantive code. But its scope is "confuse filter bubbles", which
+  is *adjacent* to misinformation defence (it changes what you see),
+  not *defence* (it doesn't detect or respond to disinfo).
+
+*Scope-vs-implementation verdict*: the repo implements *at most one
+sub-component of one of its three stated pillars* (the baseline
+classifier evaluation harness, which is not even the service path of
+the detector pillar). "Misinformation defence platform" is a broad
+claim that the current code base does not begin to substantiate.
+This is the heaviest finding in the audit.
+
+== Grade x Evidence Matrix
+
+[cols="1,1,3,3"]
+|===
+| Grade | Met? | Evidence supporting | Evidence against / gaps
+
+| X
+| n/a
+| >=47 `#[test]` attributes exist → not X
+| —
+
+| F
+| n/a
+| Not superseded; no harm signal.
+| `defensive-multiplicity/` is a candidate for consolidation into
+  `algorithm-shield/` or dropping entirely given its pre-E status.
+
+| E
+| ✓
+| >=1 test exists; substantial baseline test suite in
+  `disinfo-nesy-detector/eval/`; failures (stubbed components)
+  documented in TEST-NEEDS.md "What is Stubbed".
+| —
+
+| D
+| ✓ *(earned)*
+| Structural shell complete: 18 workflows (parse cleanly), umbrella
+  6a2 layout, contractile quartet, Justfile + Mustfile + Containerfile,
+  `.well-known/`, LICENSES, SPDX on 25/25 Rust files (with licence-
+  mismatch on 5 of them), `#![forbid(unsafe_code)]` in two library
+  crates, zero Makefile, zero banned-language source, zero committed
+  merge conflicts, single-`.git` monorepo hygiene. Scope documented
+  in README.adoc + EXPLAINME.adoc + PROOF-NEEDS.md + TEST-NEEDS.md
+  (however inaccurately).
+| ROADMAP.adoc "awaiting specification"; README says "specification
+  phase" — these are front-door contradictions with a C claim but do
+  not drop D-floor. SPDX Apache-2.0 / Hyperpolymath attribution in 5
+  files is a *rule breach* that should be spot-fixed.
+
+| C
+| *✗*
+| Baseline classifier code is real (4 623 LOC under `eval/`),
+  substantial test suite (~47-57 tests depending on proptest
+  semantics), honest "What is Stubbed" section in TEST-NEEDS.md,
+  `#![forbid(unsafe_code)]` in two library crates, zero `unsafe`
+  blocks in scanned Rust, zero real dangerous-pattern uses.
+| *No `[dogfooding-status]` section*. Six dogfood integrations
+  claimed in EXPLAINME — zero substantiated (`proven` / Ephapax /
+  neural-foundations / maa / hypatia / social-media-tools). Three
+  detector core stages are 35-52 LOC stubs; the thing being
+  C-graded is a baseline-classifier harness, not "the platform".
+  `defensive-multiplicity/` is pre-E and part of the graded
+  surface. *README says "specification phase"*. ROADMAP says
+  "awaiting specification". TOPOLOGY.md shows all platform
+  components at 10%. STATE `completion-percentage = 20`. Umbrella
+  `Justfile` build/test/fmt/lint are "TODO" stubs. Per-subtree
+  READMEs absent across three src subtrees. Umbrella 6a2
+  META/ECOSYSTEM/AGENTIC/NEUROSYM/PLAYBOOK near-empty. SPDX/licence
+  drift in `disinfo-nesy-detector/src/` (Apache-2.0 + "Hyperpolymath"
+  attribution). `algorithm-shield/node_modules/` present. Subdir
+  `.claude/CLAUDE.md` files reference legacy `STATE.scm`.
+
+| B
+| ✗
+| —
+| Zero external targets. Zero issues-fed-back. Zero field signal.
+
+| A
+| ✗
+| —
+| No field confirmation.
+|===
+
+== Verdict
+
+*Current CRG grade: **D (Alpha)**. Demote one grade from self-declared
+C.*
+
+Self-declared: *C*. Audited: *D*. One-grade honesty delta — matches
+the proof-of-work pattern (also one-grade demote from C to D).
+
+Reasoning (one sentence): misinformation-defence-platform passes the
+D-floor cleanly (workflows parse, Containerfile trident OK, real
+baseline-classifier code with real tests, zero banned-language
+sources, zero merge conflicts), but fails the C clauses on four
+independent axes — *the README still self-identifies as
+"specification phase"*, six claimed dogfood integrations are
+unsubstantiated in code / `Cargo.toml`, the detector service itself
+is 165 LOC of stubs (what was tested is the `eval/` baseline
+harness), and `defensive-multiplicity/` (one of three graded pillars)
+is pre-E at 62 files total with no `src/` directory.
+
+The D grade is earned, not conservative-by-default, on three positive
+signals:
+
+1. Real baseline-classifier code: 4 623 LOC under
+   `disinfo-nesy-detector/eval/` with substantive baselines
+   (keyword + TF-IDF + majority), dataset loading, metrics builder,
+   explainability builder, pipeline. `#![forbid(unsafe_code)]` at
+   both library entries.
+2. Real test surface: 47+ `#[test]` attributes across unit /
+   property / e2e / aspect suites, plus 7 `proptest!` blocks with
+   real generators. Aspect suite includes adversarial coverage
+   (null bytes, oversized inputs, Unicode, bidi). An honest
+   "What is Stubbed" section in TEST-NEEDS.md names the five
+   components not yet testable.
+3. Clean structural hygiene: 18 workflows that parse, SPDX on
+   25/25 Rust source files (with a caveat on 5 of them using the
+   wrong identifier), LICENSES trident, `.well-known/` complete,
+   Containerfile + clusterfuzzlite + fuzz scaffold present, single-
+   `.git` monorepo hygiene, no `Makefile`, no `.py` / `.go` /
+   `.ts` / `v.mod`.
+
+What blocks *immediate* promotion to C (do these first):
+
+. **Remove the "Specification Phase" note from README.adoc.** A C
+  repo cannot greet new visitors with "This repository currently
+  contains project infrastructure only". Rewrite the README to
+  describe the three subprojects' *actual* state (baseline classifier
+  eval harness in detector; WASM rule engine in shield; pre-E
+  scaffold in multiplicity). Keep the honesty.
+. **Add `[dogfooding-status]` to STATE.a2ml** with concrete
+  done-entries. Or remove the C claim until there is real use.
+. **Fix or remove the six dogfood-integration claims in EXPLAINME.adoc**
+  (maa-framework / social-media-tools / hypatia / proven / ephapax /
+  neural-foundations). Either wire them in (`Cargo.toml` deps +
+  code) or rewrite the section as "Ecosystem Relations (planned)".
+. **Fix SPDX / licence drift in `disinfo-nesy-detector/`.** Change
+  `Cargo.toml` `license = "Apache-2.0"` → `"PMPL-1.0-or-later"`.
+  Change `SPDX-License-Identifier: Apache-2.0` → `PMPL-1.0-or-later`
+  in all four `.rs` files and in `algorithm-shield/src/rust/src/lib.rs`.
+  Change `SPDX-FileCopyrightText: 2024 Hyperpolymath` →
+  `2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>` across the
+  whole tree.
+. **Fix or drop `defensive-multiplicity/`.** It is pre-E inside a
+  C-graded umbrella. Either (a) implement its `src/` to ≥ E-level and
+  fix the Justfile, (b) merge it into `algorithm-shield/`, or (c)
+  drop it from the umbrella and document as superseded.
+. **Rewrite ROADMAP.adoc** from "Awaiting Specification" to real
+  milestones + dates matching the 2026-04-04 achievement narrative.
+. **Populate the umbrella `Justfile`** with working `build` / `test`
+  / `fmt` / `lint` recipes that delegate to the three subdirs
+  (`just -d disinfo-nesy-detector test`, etc.). Remove the TODO
+  stubs.
+. **Add per-subtree READMEs** for `disinfo-nesy-detector/src/`,
+  `disinfo-nesy-detector/eval/`, `algorithm-shield/src/rescript/`,
+  `algorithm-shield/src/rust/`, `algorithm-shield/src/platforms/`,
+  `algorithm-shield/src/rules/`. Empty `algorithm-shield/src/platforms/
+  {instagram,tiktok,twitter}/` directories should be removed until
+  their content lands.
+. **Fill out the 6a2 umbrella stubs** (META, ECOSYSTEM, AGENTIC,
+  NEUROSYM, PLAYBOOK) with content appropriate to a neuro-symbolic
+  detection platform.
+. **Refresh subproject `.claude/CLAUDE.md`** in
+  `disinfo-nesy-detector/` and `defensive-multiplicity/` to point at
+  `.machine_readable/6a2/*.a2ml` (post-migration canonical), not at
+  legacy `STATE.scm / META.scm`.
+. **Gitignore `algorithm-shield/node_modules/`** and move compile
+  tooling to Deno where feasible.
+. **Decide the scope question**: is this a *baseline-classifier
+  research harness* (honest framing), or a *misinformation defence
+  platform* (current framing)? Only the first is defensible from
+  the code. META.a2ml should state the canonical framing.
+
+What blocks promotion to B (after C):
+
+. Zero external targets. Need 6+ diverse — the natural set for a
+  detector is academic benchmark integrations (LIAR, FakeNewsNet,
+  FEVER), a research collaborator evaluating outputs, a CI-consumer
+  (hypatia or similar) actually calling the detection API, etc.
+. No external-contributor flow. Dependabot PRs don't count.
+. A detector that has not been pointed at a real corpus cannot feed
+  back issues.
+
+== Notes on Non-Negotiables Respected by this Audit
+
+- The `#![forbid(unsafe_code)]` library attribute is respected at
+  `disinfo-nesy-detector/src/main.rs:20` and
+  `algorithm-shield/src/rust/src/lib.rs:13` as a genuine safety signal
+  and counted toward the D positive-signal set.
+- STATE.a2ml's `[crg]` block is internally self-consistent; what
+  destroys the C claim is the gap between its line items and the
+  actual on-disk file/test/dogfood/scope evidence.
+- The overlap between `algorithm-shield/src/rules/` and
+  `social-media-tools/` is flagged as a scope question for future
+  META.a2ml decision, not re-graded here.
+- HYP-S005's current flat-key matcher does *not* fire on this repo's
+  sectioned `[crg] / grade = "C"` schema; a canary extension is
+  recommended separately. No suppression warranted on the repo side.
+- Standing rules respected: GitHub-only push origin (mirrors are
+  informational remotes), no banned-language source, Rust/Rescript
+  stack.
+- `PROOF-NEEDS.md`'s own 2026-03-29 admission ("Template ABI
+  removed — was creating false impression of formal verification")
+  is respected — the repo has already *honestly self-corrected* on
+  that axis. The residual problem is that EXPLAINME.adoc then
+  re-asserted the Idris2/Zig ABI stack after the cleanup.
+
+== STATE.a2ml update recommendation
+
+Recommended (do NOT execute as part of this audit) — edit
+`.machine_readable/6a2/STATE.a2ml`:
+
+[source,toml]
+----
+[metadata]
+project = "misinformation-defence-platform"
+version = "0.1.0"
+last-updated = "2026-04-18"
+status = "active"
+
+[project-context]
+name = "misinformation-defence-platform"
+completion-percentage = 18     # was 20 — closer to TOPOLOGY.md's 10%-per-component
+phase = "D-earned; C-lift needs scope-honest README, dogfood log, SPDX fix, defensive-multiplicity decision, EXPLAINME dogfood-table rewrite, per-subtree READMEs."
+
+[crg]
+grade = "D"                    # was "C"
+grade-previous = "C"           # audit trail
+achieved-d = "2026-04-18"      # this audit
+audit = "docs/governance/CRG-AUDIT-2026-04-18.adoc"
+next-target = "C"
+# test-count = 57              # plausible, retain; see audit §Test-matrix
+# test-pass-rate = "100%"      # retain; covers eval/ harness only
+# benchmarks-baselined = true  # retain
+notes = "CRG demoted from C to D by 2026-04-18 audit: scope claim exceeds implementation (detector service 165 LOC stubs; defensive-multiplicity pre-E); no dogfooding-status; six EXPLAINME dogfood claims unsubstantiated; README self-declares 'specification phase'."
+
+[blockers]
+onnx-model = "ONNX runtime disabled pending trained model availability"
+nats-contract-tests = "Require running NATS server — deferred to CRG B"
+spdx-licence-drift = "disinfo-nesy-detector/src/*.rs + Cargo.toml declare Apache-2.0 / 2024 Hyperpolymath; fix to PMPL-1.0-or-later / Jonathan D.A. Jewell."
+readme-contradicts-state = "README.adoc says 'Specification Phase, infrastructure only'; STATE says C. Rewrite README."
+explainme-dogfood-fabrication = "EXPLAINME §'Dogfooded Across The Account' lists 6 integrations, 0 substantiated in Cargo.toml / workflows."
+defensive-multiplicity-pre-e = "defensive-multiplicity/ has no src/, Justfile is all 'not configured yet' — decide: implement, merge into algorithm-shield, or drop."
+umbrella-justfile-stubs = "build/test/fmt/lint all 'TODO: Add X command'. Wire to subdir Justfiles."
+subproject-claude-md-legacy = "disinfo-nesy-detector/.claude/CLAUDE.md and defensive-multiplicity/.claude/CLAUDE.md still point at STATE.scm; migrate to .machine_readable/6a2/*.a2ml."
+roadmap-placeholder = "ROADMAP.adoc 'Awaiting Specification' in a C-declared repo."
+----
+
+Demote target: *D*. Route-to-C is the twelve-item fix list above.
+
+== Related Files
+
+- `.machine_readable/6a2/STATE.a2ml` — authoritative self-declared
+  state; recommend demote C→D with notes citing this audit.
+- `TEST-NEEDS.md` — declared 57 tests; broadly reconcilable with
+  on-disk ~47-57 depending on proptest semantics (much closer than
+  proof-of-work's 37-56% overclaim).
+- `EXPLAINME.adoc` §"Dogfooded Across The Account" — six
+  unsubstantiated integrations; rewrite as "Ecosystem Relations
+  (planned)".
+- `EXPLAINME.adoc` File Map — directory-level accurate, minor path-
+  prefix drift on `algorithm-shield/{background,heuristic-extractor}.js`.
+- `README.adoc` — rewrite front matter: *"Specification Phase —
+  infrastructure only"* must go before a C claim is re-earned.
+- `ROADMAP.adoc` — rewrite from "Awaiting Specification" to
+  concrete milestones.
+- `Justfile` — replace `build`/`test`/`clean`/`fmt`/`lint` TODO
+  stubs with working delegation to subdirs.
+- `defensive-multiplicity/` — scope decision needed (implement /
+  merge into algorithm-shield / drop).
+- `disinfo-nesy-detector/src/*.rs` + `Cargo.toml` — SPDX /
+  attribution fix (Apache-2.0 → PMPL-1.0-or-later; 2024
+  Hyperpolymath → 2026 Jonathan D.A. Jewell).
+- `disinfo-nesy-detector/.claude/CLAUDE.md`,
+  `defensive-multiplicity/.claude/CLAUDE.md` — refresh to post-
+  A2ML-migration paths.
+- `algorithm-shield/src/rust/src/lib.rs` — attribution fix
+  (`(c) 2026 hyperpolymath` → Jonathan D.A. Jewell).
+- `algorithm-shield/node_modules/` — gitignore.
+- `docs/governance/CRG-LIFT-PLAN-2026-04-18.adoc` — *to be written*
+  if a C-lift sprint is scheduled.
+
+_End of audit._
