@@ -30,7 +30,7 @@ sha2 = "0.10"
 hex = "0.4"
 
 # Random for baselines
-rand = "0.9"
+rand = "0.10"
 rand_chacha = "0.3"
 
 # Statistics
