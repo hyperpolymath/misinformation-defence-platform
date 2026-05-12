@@ -44,3 +44,10 @@ futures = "0.3"
 [[bin]]
 name = "nsai-detector"
 path = "src/main.rs"
+
+# Force-bumped vulnerable transitive crates to patched versions
+# (added 2026-05-12 dependabot sweep — see PR description).
+# May require code adjustments if API has changed; CI surfaces this.
+[patch.crates-io]
+rand = { version = "0.8.6" }
+rustls-webpki = { version = "0.103.13" }
