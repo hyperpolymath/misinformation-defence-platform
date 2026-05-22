@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 hyperpolymath
 // Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
 // Integration test for WASM rule engine

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = Misinformation Defence Platform — Show Me The Receipts
 :toc:
@@ -99,7 +99,7 @@ The "shapeshifter" model works by making the user's content consumption
 pattern unpredictable over time — visiting content in categories adjacent to
 the user's current profile — without modifying page content or blocking ads.
 
-*Honest caveat.* Algorithm Shield uses MPL-2.0 (not PMPL-1.0-or-later) because
+*Honest caveat.* Algorithm Shield uses MPL-2.0 (not MPL-2.0) because
 the Chrome Web Store and Firefox AMO require an OSI-approved licence for
 extension review. This is an explicit exception documented in `algorithm-shield/license/`.
 The Idris2 proofs are "in progress" — the ABI/FFI structure exists but the

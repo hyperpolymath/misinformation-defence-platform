@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // SPDX-FileCopyrightText: 2024 Hyperpolymath
 
 //! Reproducible evaluation pipeline for disinformation detection
@@ -296,7 +296,7 @@ impl EvaluationPipeline {
             result.model_description
         ))
         .organization("Hyperpolymath")
-        .license("PMPL-1.0-or-later")
+        .license("MPL-2.0")
         .framework("Rust")
         .metrics(&result.metrics)
         .training_datasets(vec![dataset_info.name.clone()])

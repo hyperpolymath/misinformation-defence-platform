@@ -400,7 +400,7 @@ extern "C" fn ephapax_evaluate_conditions(...) -> *const Action {
 - 🟡 Phase 2 (Live Testing) In Progress
 - 🔜 Phase 3 (v0.5 MVP) Planned
 
-**License**: PMPL-1.0-or-later (Palimpsest-MPL)
+**License**: MPL-2.0 (Palimpsest-MPL)
 
 ---
 

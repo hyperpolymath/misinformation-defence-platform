@@ -318,7 +318,7 @@ The goal isn't to automate your way out of filter bubbles. It's to give you **th
 
 == License
 
-**PMPL-1.0-or-later** (Palimpsest-MPL)
+**MPL-2.0** (Palimpsest-MPL)
 
 See link:LICENSE.txt[LICENSE.txt] for details.
 

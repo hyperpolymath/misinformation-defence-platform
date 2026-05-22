@@ -2,7 +2,7 @@ image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,
 image:https://img.shields.io/badge/Philosophy-Palimpsest-indigo.svg[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-license"]
 
 
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // SPDX-FileCopyrightText: 2024 Hyperpolymath
 
 = NSAI Disinfo Detector
@@ -185,7 +185,7 @@ protoc --go_out=. pkg/model_pb/analysis.proto
 
 == License
 
-This project is licensed under **PMPL-1.0-or-later**.
+This project is licensed under **MPL-2.0**.
 
 See link:docs/CITATIONS.adoc[CITATIONS.adoc] for citation formats.
 

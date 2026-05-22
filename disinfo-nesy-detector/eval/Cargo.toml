@@ -1,11 +1,11 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2024 Hyperpolymath
 
 [package]
 name = "disinfo-eval"
 version = "0.1.0"
 edition = "2021"
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 description = "Evaluation pipeline for Neuro-Symbolic Disinformation Detector"
 
 [dependencies]

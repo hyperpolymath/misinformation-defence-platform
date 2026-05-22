@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // SPDX-FileCopyrightText: 2024 Hyperpolymath
 
 //! Model Card generation for ML transparency
@@ -82,7 +82,7 @@ impl Default for ModelDetails {
             description: String::new(),
             developers: Vec::new(),
             organization: String::new(),
-            license: "PMPL-1.0-or-later".to_string(),
+            license: "MPL-2.0".to_string(),
             date: Utc::now(),
             citation: None,
             contact: None,

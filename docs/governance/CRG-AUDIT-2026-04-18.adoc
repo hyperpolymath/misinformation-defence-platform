@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 = misinformation-defence-platform — CRG Audit (2026-04-18)
@@ -106,7 +106,7 @@ Publication requires B+. Long alpha is discipline, not shame.
 | `docs/`
 
 | `LICENSE` + `LICENSES/` directory
-| PRESENT (`LICENSE` PMPL-1.0-or-later, `LICENSES/PMPL-1.0-or-later.txt`,
+| PRESENT (`LICENSE` MPL-2.0, `LICENSES/MPL-2.0.txt`,
   `LICENSES/MPL-2.0.txt`).
 | Root
 
@@ -124,7 +124,7 @@ Publication requires B+. Long alpha is discipline, not shame.
   several `disinfo-nesy-detector/src/*.rs` and `Cargo.toml` declare
   `SPDX-License-Identifier: Apache-2.0` with
   `SPDX-FileCopyrightText: 2024 Hyperpolymath`, contrary to the licence
-  policy (should be PMPL-1.0-or-later) and the author-attribution rule
+  policy (should be MPL-2.0) and the author-attribution rule
   (should be Jonathan D.A. Jewell).
 | `disinfo-nesy-detector/src/{main,onnx_wrapper,souffle_wrapper,model_pb}.rs`,
   `disinfo-nesy-detector/Cargo.toml`.
@@ -568,7 +568,7 @@ rule-aware pass should have caught them.
   Hyperpolymath`. The four `.rs` files in
   `disinfo-nesy-detector/src/` carry `SPDX-License-Identifier:
   Apache-2.0` / `SPDX-FileCopyrightText: 2024 Hyperpolymath`. Licence
-  Policy Rule 1 says PMPL-1.0-or-later. Author Attribution rule says
+  Policy Rule 1 says MPL-2.0. Author Attribution rule says
   "NEVER hyperpolymath as author name". Both violated.
   `algorithm-shield/src/rust/src/lib.rs` also has `Copyright (c) 2026
   hyperpolymath` in the header.
@@ -809,8 +809,8 @@ What blocks *immediate* promotion to C (do these first):
   neural-foundations). Either wire them in (`Cargo.toml` deps +
   code) or rewrite the section as "Ecosystem Relations (planned)".
 . **Fix SPDX / licence drift in `disinfo-nesy-detector/`.** Change
-  `Cargo.toml` `license = "Apache-2.0"` → `"PMPL-1.0-or-later"`.
-  Change `SPDX-License-Identifier: Apache-2.0` → `PMPL-1.0-or-later`
+  `Cargo.toml` `license = "Apache-2.0"` → `"MPL-2.0"`.
+  Change `SPDX-License-Identifier: Apache-2.0` → `MPL-2.0`
   in all four `.rs` files and in `algorithm-shield/src/rust/src/lib.rs`.
   Change `SPDX-FileCopyrightText: 2024 Hyperpolymath` →
   `2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>` across the
@@ -911,7 +911,7 @@ notes = "CRG demoted from C to D by 2026-04-18 audit: scope claim exceeds implem
 [blockers]
 onnx-model = "ONNX runtime disabled pending trained model availability"
 nats-contract-tests = "Require running NATS server — deferred to CRG B"
-spdx-licence-drift = "disinfo-nesy-detector/src/*.rs + Cargo.toml declare Apache-2.0 / 2024 Hyperpolymath; fix to PMPL-1.0-or-later / Jonathan D.A. Jewell."
+spdx-licence-drift = "disinfo-nesy-detector/src/*.rs + Cargo.toml declare Apache-2.0 / 2024 Hyperpolymath; fix to MPL-2.0 / Jonathan D.A. Jewell."
 readme-contradicts-state = "README.adoc says 'Specification Phase, infrastructure only'; STATE says C. Rewrite README."
 explainme-dogfood-fabrication = "EXPLAINME §'Dogfooded Across The Account' lists 6 integrations, 0 substantiated in Cargo.toml / workflows."
 defensive-multiplicity-pre-e = "defensive-multiplicity/ has no src/, Justfile is all 'not configured yet' — decide: implement, merge into algorithm-shield, or drop."
@@ -943,7 +943,7 @@ Demote target: *D*. Route-to-C is the twelve-item fix list above.
 - `defensive-multiplicity/` — scope decision needed (implement /
   merge into algorithm-shield / drop).
 - `disinfo-nesy-detector/src/*.rs` + `Cargo.toml` — SPDX /
-  attribution fix (Apache-2.0 → PMPL-1.0-or-later; 2024
+  attribution fix (Apache-2.0 → MPL-2.0; 2024
   Hyperpolymath → 2026 Jonathan D.A. Jewell).
 - `disinfo-nesy-detector/.claude/CLAUDE.md`,
   `defensive-multiplicity/.claude/CLAUDE.md` — refresh to post-
