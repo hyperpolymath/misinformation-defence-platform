@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-// Copyright (c) 2026 hyperpolymath
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
 // Minikaren-style logic programming engine for Algorithm Shield rules
 

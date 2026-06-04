@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // Popup UI controller (minimal JS glue - most logic in ReScript)
 
 // This will interface with the compiled ReScript code
