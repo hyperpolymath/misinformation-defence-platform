@@ -267,7 +267,7 @@ rule that A2ML migration is complete.
   `sorry` (substring in a comment/message, not a proof-hole
   primitive). Other hits are policy-text bans in
   `.machine_readable/MUST.contractile`,
-  `.machine_readable/agent_instructions/methodology.a2ml`, and two
+  `.machine_readable/bot_directives/methodology.a2ml`, and two
   `AGENTIC.a2ml` / `NEUROSYM.a2ml` files — bans on use, not uses.
 
 | Idris2 ABI / Zig FFI (claimed in EXPLAINME)
