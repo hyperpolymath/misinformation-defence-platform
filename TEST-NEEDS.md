@@ -1,6 +1,6 @@
 # TEST-NEEDS.md — Test Coverage Status
 
-<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <6759885+hyperpolymath@users.noreply.github.com> -->
 
 ## CRG Grade: C — ACHIEVED 2026-04-04
