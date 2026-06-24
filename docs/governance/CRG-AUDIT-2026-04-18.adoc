@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 = misinformation-defence-platform — CRG Audit (2026-04-18)
@@ -122,7 +122,7 @@ Publication requires B+. Long alpha is discipline, not shame.
 | PRESENT on 25/25 Rust files (all `.rs` under `disinfo-nesy-detector/`
   and `algorithm-shield/src/rust/` carry a SPDX header). **VIOLATION** —
   several `disinfo-nesy-detector/src/*.rs` and `Cargo.toml` declare
-  `SPDX-License-Identifier: Apache-2.0` with
+  `SPDX-License-Identifier: CC-BY-SA-4.0` with
   `SPDX-FileCopyrightText: 2024 Hyperpolymath`, contrary to the licence
   policy (should be MPL-2.0) and the author-attribution rule
   (should be Jonathan D.A. Jewell).
@@ -810,7 +810,7 @@ What blocks *immediate* promotion to C (do these first):
   code) or rewrite the section as "Ecosystem Relations (planned)".
 . **Fix SPDX / licence drift in `disinfo-nesy-detector/`.** Change
   `Cargo.toml` `license = "Apache-2.0"` → `"MPL-2.0"`.
-  Change `SPDX-License-Identifier: Apache-2.0` → `MPL-2.0`
+  Change `SPDX-License-Identifier: CC-BY-SA-4.0` → `MPL-2.0`
   in all four `.rs` files and in `algorithm-shield/src/rust/src/lib.rs`.
   Change `SPDX-FileCopyrightText: 2024 Hyperpolymath` →
   `2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>` across the
