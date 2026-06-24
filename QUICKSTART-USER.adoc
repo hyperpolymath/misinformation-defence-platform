@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Template: QUICKSTART-USER.adoc — 5-minute path to working software
 // Replace misinformation-defence-platform, Misinformation Defence Platform — See README.adoc for details., just run, Misinformation Defence Platform started successfully. with actuals
 = misinformation-defence-platform — Quick Start for Users
