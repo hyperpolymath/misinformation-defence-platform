@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Copyright (c) 2026 hyperpolymath
 // Part of Algorithm Shield - https://github.com/hyperpolymath/algorithm-shield
 
