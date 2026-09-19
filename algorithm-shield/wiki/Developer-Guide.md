@@ -178,7 +178,7 @@ algorithm-shield/
 ├── ECOSYSTEM.scm          # Position in hyperpolymath ecosystem
 ├── ARCHITECTURE.md        # Architecture overview
 ├── README.adoc            # Project README
-├── CONTRIBUTING.adoc      # Contribution guidelines
+├── ../../.github/CONTRIBUTING.md      # Contribution guidelines
 └── manifest.json          # Extension manifest (copied to dist/)
 ```
 
@@ -276,7 +276,7 @@ console.log('🔍 Debug:', variableName)
 
 ### Before You Start
 
-1. **Read** [CONTRIBUTING.adoc](https://github.com/hyperpolymath/algorithm-shield/blob/main/CONTRIBUTING.adoc)
+1. **Read** [../../.github/CONTRIBUTING.md](https://github.com/hyperpolymath/algorithm-shield/blob/main/../../.github/CONTRIBUTING.md)
 2. **Check** [open issues](https://github.com/hyperpolymath/algorithm-shield/issues)
 3. **Join** discussions on GitHub
 
