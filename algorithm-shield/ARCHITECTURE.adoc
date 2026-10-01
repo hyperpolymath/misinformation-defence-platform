@@ -179,7 +179,7 @@ From `+cerro-torre/src/core/*.adb+`:
 . *Cryptographic Correctness*: SHA-256, Ed25519 signatures (FIPS 180-4,
 RFC 8032)
 . *No Integer Overflow*: All arithmetic proven safe
-. *No Buffer Overruns*: Array accesses proven in-bounds
+. *No Buffer Overruns*: Every array index is proven to be in bounds
 
 ==== Idris2-Proven (Vörðr Runtime, v5.0+)
 
