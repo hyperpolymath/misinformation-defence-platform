@@ -29,7 +29,8 @@ and ABI/FFI stack:
 | `algorithm-shield/`
 | Browser extension that confuses algorithmic filter bubbles by injecting
   behavioural unpredictability into browsing patterns
-| ReScript frontend + Rust formal verification; Idris2 proofs in progress
+| ReScript frontend + Rust core (not formally verified); Idris2 proofs
+  `open` (no `.idr` files yet)
 
 | `defensive-multiplicity/`
 | Multi-source response orchestration and counter-narrative coordination
@@ -74,9 +75,9 @@ receives `AnalysisInput` → `src/onnx_wrapper.rs` (ONNX inference stub →
 [quote, README (algorithm-shield subdirectory)]
 ____
 Unlike most privacy tools that try to hide from algorithms, Algorithm Shield
-confuses them. Core operations are mathematically proven to be crash-free
-via the proven library. Future versions will use Ephapax with Coq proofs
-for memory safety.
+confuses them. The Rust core is not formally verified. Version 2.0
+plans to route hot paths through the proven library via Ephapax, and later
+Ephapax with Coq proofs for memory safety.
 ____
 
 *How it works.* `algorithm-shield/` is a browser extension (MPL-2.0 fallback,
@@ -88,12 +89,15 @@ per the platform/store requirement). The extension consists of:
   metadata.
 * `src/rescript/` — ReScript application code for the extension UI and
   decision logic.
-* `src/rust/` — formally verified Rust core using the `proven` library for
-  crash-free guarantees on the randomisation and noise-injection algorithms.
+* `src/rust/` — Rust rule-engine core (WASM) for the randomisation and
+  noise-injection algorithms. It is not formally verified, and it does not
+  depend on the `proven` library today. Its one unit test
+  (`minikaren::tests::test_basic_evaluation`) failed when run on 2026-11-17. Integration with `proven` through
+  Ephapax is planned for v2.0 (`src/rust/Cargo.toml`, comment at line 19).
 * `src/rules/` — platform-specific rule sets (what counts as "crossing a
   boundary" on each platform).
-* `ffi/` — Idris2 ABI definitions and Zig FFI implementation (standard
-  hyperpolymath ABI/FFI stack).
+* `ffi/` — Zig FFI implementation. No Idris2 ABI definitions exist here yet
+  (the standard hyperpolymath ABI/FFI stack is the target).
 
 The "shapeshifter" model works by making the user's content consumption
 pattern unpredictable over time — visiting content in categories adjacent to
@@ -102,8 +106,9 @@ the user's current profile — without modifying page content or blocking ads.
 *Honest caveat.* Algorithm Shield uses MPL-2.0 (not MPL-2.0) because
 the Chrome Web Store and Firefox AMO require an OSI-approved licence for
 extension review. This is an explicit exception documented in `algorithm-shield/license/`.
-The Idris2 proofs are "in progress" — the ABI/FFI structure exists but the
-formal correctness proofs are not yet complete.
+The Idris2 proofs are `open`: the Zig FFI exists, but there are no Idris2 ABI
+files and no formal correctness proofs yet. Nothing in this repository is
+formally verified.
 
 *Critical path.* `background.js` (service worker) → intercepts navigation →
 calls Rust core via WASM (or native messaging) → Rust returns noise-injection
@@ -136,8 +141,8 @@ deployment) and a Containerfile for the rootless Podman container image
 (no-new-privileges, all capabilities dropped, read-only root filesystem).
 
 The `algorithm-shield/` extension has both a `deno.json` test task (for
-ReScript logic) and a `cargo test` suite (for the Rust formally-verified core).
-`src/rust/` uses the `proven` library for crash-freedom assertions.
+ReScript logic) and a `cargo test` suite (for the Rust core: one test, which failed on 2026-11-17). Nothing in
+`src/rust/` is formally verified, and it does not yet use the `proven` library.
 
 == Dogfooded Across The Account
 
@@ -161,9 +166,9 @@ ReScript logic) and a `cargo test` suite (for the Rust formally-verified core).
   rule pattern is the same.
 
 | `proven` (library)
-| `algorithm-shield/src/rust/` explicitly depends on the `proven` library for
-  crash-freedom guarantees. This repo is a consumer of `proven`'s formal
-  verification infrastructure.
+| Planned, not yet a dependency. `algorithm-shield/src/rust/Cargo.toml` does not
+  list `proven`; integration through Ephapax hot paths is planned for v2.0
+  (`src/rust/Cargo.toml:19`, `src/rust/src/lib.rs:7`).
 
 | `ephapax`
 | Algorithm Shield's roadmap explicitly targets Ephapax with Coq proofs for
@@ -206,7 +211,8 @@ ReScript logic) and a `cargo test` suite (for the Rust formally-verified core).
 | Evaluation scripts and benchmark datasets.
 
 | `disinfo-nesy-detector/ffi/`
-| Idris2 ABI + Zig FFI (standard hyperpolymath ABI/FFI stack).
+| Zig FFI. No Idris2 ABI files yet (the standard hyperpolymath ABI/FFI stack
+  is the target).
 
 | `disinfo-nesy-detector/ci/helm/detector/`
 | Helm chart for Kubernetes deployment.
@@ -232,13 +238,14 @@ ReScript logic) and a `cargo test` suite (for the Rust formally-verified core).
 | ReScript extension UI and decision logic.
 
 | `algorithm-shield/src/rust/`
-| Formally verified Rust core (crash-freedom via `proven` library).
+| Rust rule-engine core (WASM). Not formally verified; `proven`
+  integration planned for v2.0.
 
 | `algorithm-shield/src/rules/`
 | Platform-specific rule sets (X/Twitter, YouTube, Facebook, etc.).
 
 | `algorithm-shield/ffi/`
-| Idris2 ABI + Zig FFI for the Rust/ReScript boundary.
+| Zig FFI for the Rust/ReScript boundary. No Idris2 ABI files yet.
 
 | `algorithm-shield/ABI-FFI-README.md`
 | Documents the Idris2/Zig ABI/FFI architecture for this extension.
@@ -250,7 +257,7 @@ ReScript logic) and a `cargo test` suite (for the Rust formally-verified core).
 | Source placeholder (RSR-standard structure).
 
 | `defensive-multiplicity/ffi/`
-| Idris2 ABI + Zig FFI scaffold.
+| Zig FFI scaffold. No Idris2 ABI files yet.
 
 | `docs/CITATIONS.adoc`
 | Citation instructions for academic use of this platform.
