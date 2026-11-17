@@ -45,7 +45,7 @@ Instead of blocking trackers or masking your identity, it makes your behavior un
 
 === What Makes This Different
 
-**Mathematically Proven Safety**: Unlike most software that's "tested and seems fine," Algorithm Shield uses formal verification. Core operations are mathematically proven to be crash-free (via https://github.com/hyperpolymath/proven[proven library]). Future versions will use https://github.com/hyperpolymath/ephapax[Ephapax] with Coq proofs for memory safety. When we say "unbreakable code," we mean it literally.
+**On the road to proven safety**: Today the Rust core is not formally verified, its one unit test (`cargo test`) currently fails, and it does not yet depend on the https://github.com/hyperpolymath/proven[proven library]. Version 2.0 plans to route hot paths through proven via https://github.com/hyperpolymath/ephapax[Ephapax], and later versions plan Ephapax with Coq proofs for memory safety. Until those land, no crash-freedom proof covers this code.
 
 **Narratable by Design**: You always know what Algorithm Shield is doing and why. Every action comes with a human-readable explanation. No mysterious black boxes - just transparent tools you can understand and control.
 
@@ -53,7 +53,7 @@ Instead of blocking trackers or masking your identity, it makes your behavior un
 
 **Respectful of Agency**: The tool asks permission before taking action. You're in control - Algorithm Shield is your assistant, not your replacement.
 
-**Part of a Verified Ecosystem**: Algorithm Shield integrates with a broader ecosystem of formally verified tools - proven (crash-proof operations), Ephapax (linear types), Svalinn/Vörðr/Cerro Torre (verified container stack). It's not just one secure tool - it's part of a coherent vision where **mathematical certainty replaces "we think it's safe."**
+**Part of a Planned Verified Ecosystem**: Algorithm Shield is designed to integrate (planned, not yet wired) with a broader ecosystem of formally verified tools - proven (safe operations), Ephapax (linear types), Svalinn/Vörðr/Cerro Torre (verified container stack). It's not just one secure tool - it's part of a coherent vision where **mathematical certainty replaces "we think it's safe."**
 
 === The Bigger Picture
 
@@ -170,7 +170,7 @@ Algorithm Shield implements comprehensive security measures:
 * **All processing happens locally** in your browser
 * **No network requests** - extension works 100% offline
 * **Open source** - you can verify the code yourself
-* **Mathematically proven safe** - Uses https://github.com/hyperpolymath/proven[proven library] (Idris2-verified crash-proof operations)
+* **Not yet formally verified** - integration with the https://github.com/hyperpolymath/proven[proven library] (Idris2) is planned for v2.0
 
 === Accessibility (WCAG 2.3 AAA Compliant) ✅
 
@@ -228,7 +228,7 @@ A: Yes. You're just using a browser extension to automate your own browsing. No 
 - ReScript (UI)
 - Rust/WASM (rule engine)
 - Ephapax (hot paths, v2.0+)
-- **proven library** (Idris2 verified safety)
+- **proven library** (Idris2; planned for v2.0, not yet a dependency)
 
 **Build**:
 ```bash
@@ -304,9 +304,9 @@ By making your behavior unpredictable, you become unprofileable. And when you're
 
 **The membrane operates at every layer.**
 
-We use formal verification (Idris2 + proven library) to mathematically prove our code cannot crash or leak data. No "we think it's safe" - we have mathematical proof. Future versions integrate Ephapax (Coq-proven memory safety), Svalinn/Vörðr (verified containers), and Cerro Torre (cryptographic provenance).
+We are working toward formal verification (Idris2 + proven library) so that we can prove our code cannot crash or leak data. Today the code is not proven. Future versions plan to integrate Ephapax (Coq-proven memory safety), Svalinn/Vörðr (verified containers), and Cerro Torre (cryptographic provenance).
 
-**Four layers of mathematical proof.** This isn't just good engineering - it's a statement that tools for cognitive autonomy deserve the same rigor as safety-critical systems.
+**Four planned layers of mathematical proof.** This isn't just good engineering - it's a statement that tools for cognitive autonomy deserve the same rigor as safety-critical systems.
 
 **Respect for human agency is non-negotiable.**
 
@@ -329,7 +329,7 @@ This is open source software that respects your freedom. Fork it, modify it, sha
 == Acknowledgments
 
 Built on:
-- https://github.com/hyperpolymath/proven[proven] - Mathematically verified crash-proof operations (Idris2)
+- https://github.com/hyperpolymath/proven[proven] - Idris2 library of safe operations (integration planned for v2.0)
 - https://github.com/hyperpolymath/ephapax[ephapax] - Linear types for WASM performance
 - https://github.com/hyperpolymath/svalinn[svalinn] - Verified container gateway
 - https://github.com/hyperpolymath/vordr[vörðr] - Formally verified container runtime
